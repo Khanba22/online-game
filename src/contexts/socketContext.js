@@ -25,7 +25,7 @@ export const RoomProvider = ({ children }) => {
     console.log(roomId);
   };
 
-  const removePeer = ({ peerId }) => {
+  const removePeer = ({ peerId , name }) => {
     dispatch(removePeerAction(peerId));
   }
 

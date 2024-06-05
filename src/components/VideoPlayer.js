@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 
-const VideoPlayer = ({ stream }) => {
+const VideoPlayer = ({ stream, name , isAdmin }) => {
   const [muted, setMute] = useState(false);
   const videoRef = useRef(null);
   useEffect(() => {
@@ -9,7 +9,16 @@ const VideoPlayer = ({ stream }) => {
   return (
     <>
       <video ref={videoRef} muted={muted} autoPlay></video>
-      <button onClick={()=>{setMute(!muted)}}>{!muted?"Mute":"Unmute"}</button>
+      <div className="container">
+        <h2>{name} {isAdmin && "Admin"}</h2>
+        <button
+          onClick={() => {
+            setMute(!muted);
+          }}
+        >
+          {!muted ? "Mute" : "Unmute"}
+        </button>
+      </div>
     </>
   );
 };

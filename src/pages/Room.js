@@ -19,16 +19,21 @@ const Room = () => {
       {joined ? (
         <>
           <h2>Room Id {roomId}</h2>
-          {members.map((participant) => {
-            return <p>{participant}</p>;
+          {members.map((participant,index) => {
+            if (index === 0) {
+              return <p>{participant} - Admin</p>;
+            }else{
+              return <p>{participant}</p>;
+            }
           })}
-          <VideoPlayer stream={stream} />
+          <VideoPlayer isAdmin = {members[0] === name} stream={stream} name={name} />
           {
-            Object.values(peers).map((peer) => {
-                return <VideoPlayer stream={peer.stream} />
+            Object.values(peers).map((peer,i) => {
+                return <VideoPlayer isAdmin={false} name = {members[0] !== name?members[i]:members[i+1]} stream={peer.stream} />
 
             })
           }
+          {members[0] === name? <button>Start Game</button>:<></>}
         </>
       ) : (
         <>
