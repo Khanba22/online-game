@@ -3,10 +3,7 @@ import { Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
 import Room from "./pages/Room";
 import "./App.css"
-
-// import CreateRoom from './components/CreateRoom';
-// import Room from './components/Room';
-// import Test from './components/Test';
+import GamePage from "./pages/GamePage";
 
 const App = () => {
   return (
@@ -14,6 +11,7 @@ const App = () => {
       <Routes>
         <Route element = {<Home />} path="/"/>
         <Route element = {<Room/>} path="/room/:id"/>
+        <Route element = {<GamePage/>} path="/game/:id"/>
       </Routes>
     </>
   );

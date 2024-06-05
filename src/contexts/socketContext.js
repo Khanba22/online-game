@@ -13,24 +13,30 @@ const ws = socketIoClient(WS);
 export const RoomProvider = ({ children }) => {
   const navigate = useNavigate();
   const [me, setMe] = useState();
-  const [peers,dispatch] = useReducer(peerReducer, {})
-  const [data,setData] = useState({
+  const [peers, dispatch] = useReducer(peerReducer, {});
+  const [data, setData] = useState({
     members: [],
     participants: [],
-    roomId:"",
-  })
-  const [stream,setStream] = useState(null);
+    roomId: "",
+  });
+  const [name,setName] = useState("");
+  const [stream, setStream] = useState(null);
   const enterRoom = ({ roomId }) => {
     navigate(`/room/${roomId}`);
-    console.log(roomId);
   };
 
-  const removePeer = ({ peerId , name }) => {
+  const removePeer = ({ peerId, members }) => {
+    setData({ ...data, members: members });
     dispatch(removePeerAction(peerId));
-  }
+  };
 
-  const getUsers = ({ roomId, participants , memberNames }) => {
-    setData({roomId, participants,members: memberNames});
+  const getUsers = ({ roomId, participants, memberNames }) => {
+    setData({ ...data, roomId, participants, members: memberNames });
+  };
+
+  const startGame = ({ roomId }) => {
+    alert("Starting Game");
+    navigate(`/game/${roomId}`);
   };
 
   useEffect(() => {
@@ -38,42 +44,46 @@ export const RoomProvider = ({ children }) => {
     const peer = new Peer(meId);
     setMe(peer);
     try {
-        navigator.mediaDevices.getUserMedia({audio:true,video:false}).then((stream) => {
-            setStream(stream)
-        })
+      navigator.mediaDevices
+        .getUserMedia({ audio: true, video: false })
+        .then((stream) => {
+          setStream(stream);
+        });
     } catch (error) {
-        console.error(error);
+      console.error(error);
     }
+    ws.on("start-game", startGame);
     ws.on("room-created", enterRoom);
     ws.on("get-users", getUsers);
     ws.on("user-disconnected", removePeer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    ws.on("invalid-room", () => {
+      alert("The Room Code Is Invalid Or The Game has Already Started");
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if(!me) return;
-    if(!stream) return;
+    if (!me) return;
+    if (!stream) return;
 
-    ws.on("user-joined",({peerId})=>{
-        const call = me.call(peerId,stream);
-        call.on("stream", (peerStream)=>{
-            dispatch(addPeerAction(peerId,peerStream));
-        })
-    })
+    ws.on("user-joined", ({ peerId }) => {
+      const call = me.call(peerId, stream);
+      call.on("stream", (peerStream) => {
+        dispatch(addPeerAction(peerId, peerStream));
+      });
+    });
 
-    me.on("call", (call)=>{
-        call.answer(stream)
-        call.on("stream", (peerStream)=>{
-            dispatch(addPeerAction(call.peer,peerStream));
-        })
-    })
+    me.on("call", (call) => {
+      call.answer(stream);
+      call.on("stream", (peerStream) => {
+        dispatch(addPeerAction(call.peer, peerStream));
+      });
+    });
+  }, [me, stream]);
 
-  },[me,stream])
-
-  console.log(peers)
 
   return (
-    <RoomContext.Provider value={{ ws, me, ...data , stream , peers }}>
+    <RoomContext.Provider value={{ ws, me, data, stream, peers , name , setName }}>
       {children}
     </RoomContext.Provider>
   );
