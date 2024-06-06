@@ -4,9 +4,25 @@ import { microphone, muteMic, speaker, speakerMute } from "../assets/index";
 const VideoPlayer = ({ stream, name, isAdmin, you }) => {
   const [muted, setMute] = useState(true);
   const videoRef = useRef(null);
+  const [volume, setVolume] = useState(10); // Change initial volume to be in the range 0-10
+
+  const handleVolumeChange = (e) => {
+    const newVolume = e.target.value / 10;
+    setVolume(newVolume * 10); // Store volume in the range 0-10
+  };
+
   useEffect(() => {
-    videoRef.current.srcObject = stream;
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+    }
   }, [stream]);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.volume = volume / 10; // Set volume in the range 0-1 for the video element
+    }
+  }, [volume]);
+
   return (
     <div className="flex items-center p-4 space-x-4 border-b border-gray-200">
       <video
@@ -19,6 +35,14 @@ const VideoPlayer = ({ stream, name, isAdmin, you }) => {
         <h2 className="text-xl font-semibold">
           {!you ? name : "You"} {isAdmin && "(Admin)"}
         </h2>
+        <input
+          type="range"
+          value={volume}
+          min={0}
+          max={10}
+          step={1}
+          onChange={handleVolumeChange}
+        />
         <button
           className="p-2 text-sm text-white bg-blue-500 rounded hover:bg-blue-600"
           onClick={() => {
@@ -28,9 +52,9 @@ const VideoPlayer = ({ stream, name, isAdmin, you }) => {
         >
           <div className="h-6 aspect-square">
             {!you ? (
-              <img src={muted ? microphone : muteMic} alt="" />
+              <img src={muted ? microphone : muteMic} alt="Microphone Icon" />
             ) : (
-              <img src={muted ? speaker : speakerMute} alt="" />
+              <img src={muted ? speaker : speakerMute} alt="Speaker Icon" />
             )}
           </div>
         </button>

@@ -5,8 +5,7 @@ import SettingsTab from "../components/SettingsTab";
 
 const GamePage = () => {
   const { id } = useParams();
-  const { ws, me, data, stream, peers, setName, name } =
-    useContext(RoomContext);
+  const { ws, me, data, stream, peers, setName, name } = useContext(RoomContext);
   const { roomId, members, participants } = data;
 
   return (
