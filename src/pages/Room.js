@@ -1,76 +1,45 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { RoomContext } from "../contexts/socketContext";
-import VideoPlayer from "../components/VideoPlayer";
+import AudioControls from "../components/AudioControls";
 
 const Room = () => {
   const { id } = useParams();
-  const { ws, me, data, stream, peers, setName, name } =
-    useContext(RoomContext);
-  const [joined, setJoined] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { setName, name, joined, setJoined } = useContext(RoomContext);
+  const { ws, me, data, } = useContext(RoomContext);
   const { roomId, members } = data;
-
+  const startGame = () => {
+    ws.emit("start-request", { roomId });
+  };
+  const [isAdmin, setIsAdmin] = useState(false);
   useEffect(() => {
     if (joined) {
       setIsAdmin(members[0] === name);
     }
   }, [joined, name, members]);
-
-  const logData = () => {
-    console.log(data);
-  };
-
-  const startGame = () => {
-    ws.emit("start-request", { roomId });
-  };
-
   useEffect(() => {
     if (me && joined) {
       ws.emit("join-room", { roomId: id, peerId: me._id, name });
     }
   }, [id, me, ws, joined, name]);
+
   return (
-    <div className="container mx-auto p-4">
+    <>
       {joined ? (
-        <div className="bg-teal-100 p-6 rounded-lg shadow-lg">
-          <h2 className="text-teal-800 text-2xl font-bold mb-4">
-            Room Id {roomId}
-          </h2>
-          <div className="space-y-4">
-            {Object.values(peers).map((peer, i) => {
-              const isYou = members[i] === name;
-              return (
-                <VideoPlayer
-                  you={isYou}
-                  key={i}
-                  isAdmin={i === 0}
-                  stream={isYou ? stream : peer.stream}
-                  name={members[i]}
-                />
-              );
-            })}
-          </div>
-          <div className="mt-6 space-x-4">
+        <>
+          <AudioControls />
+          {isAdmin && (
             <button
               className="bg-teal-500 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition duration-300"
-              onClick={logData}
+              onClick={startGame}
             >
-              Log Data
+              Start Game
             </button>
-            {isAdmin && (
-              <button
-                className="bg-teal-500 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition duration-300"
-                onClick={startGame}
-              >
-                Start Game
-              </button>
-            )}
-          </div>
-        </div>
+          )}
+        </>
       ) : (
         <div className="bg-teal-100 p-6 rounded-lg shadow-lg">
-          <label htmlFor="name" className="block text-teal-800 font-bold mb-2">
+          <label htmlFor="name" className="text-teal-800 font-bold mb-2">
             Name
           </label>
           <input
@@ -88,7 +57,7 @@ const Room = () => {
           </button>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

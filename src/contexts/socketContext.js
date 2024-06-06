@@ -11,6 +11,7 @@ export const RoomContext = createContext(null);
 const ws = socketIoClient(WS);
 
 export const RoomProvider = ({ children }) => {
+  const [joined, setJoined] = useState(false);
   const navigate = useNavigate();
   const [me, setMe] = useState();
   const [peers, dispatch] = useReducer(peerReducer, {});
@@ -35,7 +36,6 @@ export const RoomProvider = ({ children }) => {
   };
 
   const startGame = ({ roomId }) => {
-    alert("Starting Game");
     navigate(`/game/${roomId}`);
   };
 
@@ -83,7 +83,7 @@ export const RoomProvider = ({ children }) => {
 
 
   return (
-    <RoomContext.Provider value={{ ws, me, data, stream, peers , name , setName }}>
+    <RoomContext.Provider value={{ ws, me, data, stream, peers , name , setName , joined,setJoined }}>
       {children}
     </RoomContext.Provider>
   );
