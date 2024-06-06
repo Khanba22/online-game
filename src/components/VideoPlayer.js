@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-
+import { microphone, muteMic, speaker, speakerMute } from "../assets/index";
 
 const VideoPlayer = ({ stream, name, isAdmin, you }) => {
   const [muted, setMute] = useState(true);
@@ -11,7 +11,7 @@ const VideoPlayer = ({ stream, name, isAdmin, you }) => {
     <div className="flex items-center p-4 space-x-4 border-b border-gray-200">
       <video
         ref={videoRef}
-        muted={muted}
+        muted={muted || you}
         autoPlay
         className="w-1/4 h-auto -z-10"
       ></video>
@@ -20,13 +20,19 @@ const VideoPlayer = ({ stream, name, isAdmin, you }) => {
           {!you ? name : "You"} {isAdmin && "(Admin)"}
         </h2>
         <button
-          className="px-4 py-2 text-sm text-white bg-blue-500 rounded hover:bg-blue-600"
+          className="p-2 text-sm text-white bg-blue-500 rounded hover:bg-blue-600"
           onClick={() => {
             stream.getAudioTracks()[0].enabled = muted;
             setMute(!muted);
           }}
         >
-          {!muted ? <img src="" alt="" /> : "Unmute"}
+          <div className="h-6 aspect-square">
+            {!you ? (
+              <img src={muted ? microphone : muteMic} alt="" />
+            ) : (
+              <img src={muted ? speaker : speakerMute} alt="" />
+            )}
+          </div>
         </button>
       </div>
     </div>

@@ -20,7 +20,7 @@ export const RoomProvider = ({ children }) => {
     participants: [],
     roomId: "",
   });
-  const [name,setName] = useState("");
+  const [name, setName] = useState("");
   const [stream, setStream] = useState(null);
   const enterRoom = ({ roomId }) => {
     navigate(`/room/${roomId}`);
@@ -81,12 +81,11 @@ export const RoomProvider = ({ children }) => {
     });
   }, [me, stream]);
 
-
   return (
-    <RoomContext.Provider value={{ ws, me, data, stream, peers , name , setName , joined,setJoined }}>
+    <RoomContext.Provider
+      value={{ ws, me, data, stream, peers, name, setName, joined, setJoined }}
+    >
       {children}
     </RoomContext.Provider>
   );
 };
-
-// export default RoomContext;
