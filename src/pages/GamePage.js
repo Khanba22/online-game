@@ -21,7 +21,7 @@ const GamePage = () => {
       <SettingsTab show={show} handleShow={handleShow} />
 
       <div className="h-screen w-screen">
-        <MainCanvas setShow = {setShow} show={show} handleShow={handleShow} />
+        <MainCanvas setShow={setShow} show={show} handleShow={handleShow} />
       </div>
     </>
   );

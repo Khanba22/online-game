@@ -1,48 +1,33 @@
-// src/App.js
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { PointerLockControls, Plane, SpotLight } from "@react-three/drei";
+import { Plane } from "@react-three/drei";
+import { Physics, RigidBody } from "@react-three/rapier";
+import Controls from "./Controls";
 import * as THREE from "three";
-
-const SphereWithPosition = ({ position, color }) => {
+const SphereWithPosition = ({ color, sphereRef, position }) => {
   return (
-    <mesh position={position}>
-      <sphereGeometry args={[0.2, 32, 32]} />
+    <mesh ref={sphereRef} position={position}>
+      <sphereGeometry />
       <meshStandardMaterial color={color} />
     </mesh>
   );
 };
 
-const Scene = ({ cameraPosition, setShow, setEnable }) => {
-  const spheres = [
-    { position: [5, 0, 0], color: "pink" },
-    { position: [1.545, 4.755, 0], color: "blue" },
-    { position: [-4.045, 2.938, 0], color: "green" },
-    { position: [-4.045, -2.938, 0], color: "yellow" },
-    { position: [1.545, -4.755, 0], color: "purple" },
-    { position: [0, 1, 5], color: "orange" },
-  ];
-
+const Scene = ({ setShow, setEnable }) => {
+  const [playerPos, setPlayerPos] = useState(new THREE.Vector3(0, 0, 0));
+  const sphereRef = useRef(null);
   const { camera } = useThree();
-
-  useFrame(() => {
-    camera.position.set(
-      cameraPosition[0],
-      cameraPosition[1],
-      cameraPosition[2]
-    );
-  });
 
   return (
     <>
-      <PointerLockControls
-        onUnlock={() => {
-          setEnable(false);
-          setShow(true);
-          setTimeout(() => {
-            setEnable(true);
-          }, 1500);
-        }}
+      <axesHelper args={[100, 100, 100]} />
+      <Controls
+        sphereRef={sphereRef}
+        setPlayerPos={setPlayerPos}
+        setEnable={setEnable}
+        setShow={setShow}
+        position={[10, 10, 10]}
+        camera={camera}
         selector="#buttonControl"
       />
       <ambientLight intensity={0.8} />
@@ -58,26 +43,30 @@ const Scene = ({ cameraPosition, setShow, setEnable }) => {
         intensity={1.5} // Add a directional light
         castShadow
       />
-      <Plane
-        position={[0, -1, 0]}
-        args={[100, 100]}
-        rotation={[-Math.PI / 2, 0, 0]}
-      >
-        <meshStandardMaterial color={"brown"} />
-      </Plane>
-      {spheres.map((sphere, index) => (
-        <SphereWithPosition
-          key={index}
-          position={sphere.position}
-          color={sphere.color}
-        />
-      ))}
+      <Physics gravity={[0, -10, 0]}>
+        <RigidBody colliders="ball">
+          <SphereWithPosition
+            position={[10, 10, 10]}
+            sphereRef={sphereRef}
+            color={"Yellow"}
+          />
+        </RigidBody>
+
+        <RigidBody type="fixed" colliders="trimesh">
+          <Plane
+            position={[0, 0, 0]}
+            args={[100, 100]}
+            rotation={[-Math.PI / 2, 0, 0]}
+          >
+            <meshStandardMaterial color={"brown"} />
+          </Plane>
+        </RigidBody>
+      </Physics>
     </>
   );
 };
 
 const App = () => {
-  const [cameraPosition, setCameraPosition] = useState([1.545, 4.755, 0]);
   const [show, setShow] = useState(true);
   const [enable, setEnable] = useState(true);
 
@@ -96,19 +85,12 @@ const App = () => {
               setShow(false);
             }}
           >
-           {
-            enable?" Click To Continue":""
-           }
+            {enable ? " Click To Continue" : ""}
           </button>
         </div>
       )}
       <Canvas style={{ height: "100vh" }}>
-        <Scene
-          setEnable={setEnable}
-          setShow={setShow}
-          show={show}
-          cameraPosition={cameraPosition}
-        />
+        <Scene setEnable={setEnable} setShow={setShow} show={show} />
       </Canvas>
     </>
   );
