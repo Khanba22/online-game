@@ -1,10 +1,9 @@
-import React, { useContext, useState } from "react";
+import React, { useContext } from "react";
 import { Canvas } from "@react-three/fiber";
 import { PointerLockControls, Box, Icosahedron } from "@react-three/drei";
 import "./styles.css"; // Import the styles for the crosshair
 import RaycasterComponent from "../components/RayCaster";
 import Crosshair from "../components/Crosshair";
-import tempData from "../../tempData.json"
 import { RoomContext } from "../../contexts/socketContext";
 
 const Scene = () => {

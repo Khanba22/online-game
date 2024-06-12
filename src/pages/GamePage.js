@@ -1,14 +1,13 @@
-import React, { useContext, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import React, { useContext, useEffect  } from "react";
+// import { useParams } from "react-router-dom";
 import { RoomContext } from "../contexts/socketContext";
 import MainCanvas from "../three/Pages/MainCanvas";
 
 const GamePage = () => {
-  const { id } = useParams();
-  const { ws, me, stream, peers, setName, name, roomId, isAdmin } =
+  // const { id } = useParams();
+  const { ws, roomId, isAdmin } =
     useContext(RoomContext);
 
-  const [show, setShow] = useState(false);
 
   const startNextRound = () => {
     ws.emit("start-round", { roomId });
@@ -32,9 +31,6 @@ const GamePage = () => {
     });
   }, [ws]);
 
-  const handleShow = () => {
-    setShow(!show);
-  };
 
   return (
     <>
