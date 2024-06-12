@@ -5,18 +5,17 @@ import AudioControls from "../components/AudioControls";
 
 const Room = () => {
   const { id } = useParams();
-  const { setName, name, joined, setJoined } = useContext(RoomContext);
-  const { ws, me, data, } = useContext(RoomContext);
-  const { roomId, members } = data;
+  const { setName, name, joined, setJoined, setIsAdmin, isAdmin } =
+    useContext(RoomContext);
+  const { ws, me, roomId, playerData } = useContext(RoomContext);
   const startGame = () => {
     ws.emit("start-request", { roomId });
   };
-  const [isAdmin, setIsAdmin] = useState(false);
   useEffect(() => {
-    if (joined) {
-      setIsAdmin(members[0] === name);
+    if (joined && playerData[0]) {
+      setIsAdmin(playerData[0].username === name);
     }
-  }, [joined, name, members]);
+  }, [joined, name, playerData, setIsAdmin]);
   useEffect(() => {
     if (me && joined) {
       ws.emit("join-room", { roomId: id, peerId: me._id, name });

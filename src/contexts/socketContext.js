@@ -8,34 +8,35 @@ import { addPeerAction, removePeerAction } from "./peerActions";
 const WS = "http://localhost:8080";
 
 export const RoomContext = createContext(null);
-const ws = socketIoClient(WS);
+const ws = socketIoClient(WS, { reconnection: false });
 
 export const RoomProvider = ({ children }) => {
   const [joined, setJoined] = useState(false);
   const navigate = useNavigate();
   const [me, setMe] = useState();
   const [peers, dispatch] = useReducer(peerReducer, {});
-  const [data, setData] = useState({
-    members: [],
-    participants: [],
-    roomId: "",
-  });
+  const [roomId, setRoomId] = useState("");
   const [name, setName] = useState("");
   const [stream, setStream] = useState(null);
+  const [playerData, setPlayerData] = useState([]);
+  const [isAdmin, setIsAdmin] = useState(false);
   const enterRoom = ({ roomId }) => {
     navigate(`/room/${roomId}`);
   };
 
-  const removePeer = ({ peerId, members }) => {
-    setData({ ...data, members: members });
+  const removePeer = ({ peerId }) => {
+    setRoomId(roomId);
     dispatch(removePeerAction(peerId));
   };
 
-  const getUsers = ({ roomId, participants, memberNames }) => {
-    setData({ ...data, roomId, participants, members: memberNames });
+  const getUsers = ({ roomId, memberNames }) => {
+    console.log(memberNames);
+    setRoomId(roomId);
+    setPlayerData(memberNames);
   };
 
   const startGame = ({ roomId }) => {
+    setRoomId(roomId);
     navigate(`/game/${roomId}`);
   };
 
@@ -83,7 +84,22 @@ export const RoomProvider = ({ children }) => {
 
   return (
     <RoomContext.Provider
-      value={{ ws, me, data, stream, peers, name, setName, joined, setJoined }}
+      value={{
+        ws,
+        me,
+        roomId,
+        setRoomId,
+        stream,
+        peers,
+        name,
+        setName,
+        joined,
+        setJoined,
+        playerData,
+        setPlayerData,
+        isAdmin,
+        setIsAdmin,
+      }}
     >
       {children}
     </RoomContext.Provider>

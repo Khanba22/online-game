@@ -1,0 +1,75 @@
+[
+    {
+        "username": "Mushan Khan",
+        "lives": 5,
+        "equipment": {
+            "shield": 2,
+            "doubleDamage": 3,
+            "heal": 2,
+            "looker": 1,
+            "rotator": 1,
+            "skipper": 1
+        },
+        "isShielded":false,
+        "hasDoubleDamage":false,
+        "canLookBullet":false,
+        "color": "red",
+        "position": [3, 0, 0]
+    },
+    {
+        "username": "Arya Stark",
+        "lives": 4,
+        "equipment": {
+            "sheilds": 1,
+            "doubleDamage": 2,
+            "heal": 3,
+            "looker": 0,
+            "rotator": 2,
+            "skipper": 1
+        },
+        "color": "blue",
+        "position": [2.427, 1.764, 0]
+    },
+    {
+        "username": "Jon Snow",
+        "lives": 3,
+        "equipment": {
+            "sheilds": 2,
+            "doubleDamage": 1,
+            "heal": 2,
+            "looker": 2,
+            "rotator": 1,
+            "skipper": 0
+        },
+        "color": "black",
+        "position": [0.927, 2.853, 0]
+    },
+    {
+        "username": "Daenerys Targaryen",
+        "lives": 5,
+        "equipment": {
+            "sheilds": 3,
+            "doubleDamage": 3,
+            "heal": 1,
+            "looker": 1,
+            "rotator": 0,
+            "skipper": 2
+        },
+        "color": "purple",
+        "position": [-0.927, 2.853, 0]
+    },
+    {
+        "username": "Tyrion Lannister",
+        "lives": 2,
+        "equipment": {
+            "sheilds": 0,
+            "doubleDamage": 4,
+            "heal": 1,
+            "looker": 3,
+            "rotator": 1,
+            "skipper": 1
+        },
+        "color": "green",
+        "position": [-2.427, 1.764, 0]
+    }
+]

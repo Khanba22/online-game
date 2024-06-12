@@ -1,14 +1,16 @@
 const { v4 } = require("uuid");
-const rooms = {};
-const roomName = {};
-const roomConfig = {};
+const colorArr = ["red", "blue", "green", "yellow", "pink"];
+const positions = [[3, 0, 0],[2.427, 1.764, 0],[0.927, 2.853, 0],[-0.927, 2.853, 0],[-2.427, 1.764, 0]]
 
-const roomHandler = (socket) => {
+const roomHandler = (socket, rooms, roomName, roomConfig) => {
   const createRoom = () => {
     const roomId = v4();
     rooms[roomId] = [];
     roomName[roomId] = [];
     roomConfig[roomId] = {
+      turn:0,
+      rounds:3,
+      memberNo: 0,
       hasStarted: false,
     };
     socket.join(roomId);
@@ -18,30 +20,45 @@ const roomHandler = (socket) => {
     if (rooms[roomId] && !roomConfig[roomId].hasStarted) {
       socket.join(roomId);
       if (!rooms[roomId].includes(peerId)) {
-        roomName[roomId].push(name);
+        const config = {
+          username: name,
+          lives: 5,
+          equipment: {
+            shield: 0,
+            doubleDamage: 0,
+            heal: 0,
+            looker: 0,
+            rotator: 0,
+            skipper: 0,
+          },
+          isShielded: false,
+          hasDoubleDamage: false,
+          canLookBullet: false,
+          color: colorArr[roomConfig[roomId].memberNo],
+          position:positions[roomConfig[roomId].memberNo],
+        };
+        roomName[roomId].push(config);
         rooms[roomId].push(peerId);
+        socket.to(roomId).emit("user-joined", { peerId });
+        roomConfig[roomId].memberNo = roomConfig[roomId].memberNo + 1;
+        socket.emit("user-joined", { peerId  });
+        socket.to(roomId).emit("get-users", {
+          roomId,
+          participants: rooms[roomId],
+          memberNames: roomName[roomId],
+        });
+        socket.emit("get-users", {
+          roomId,
+          participants: rooms[roomId],
+          memberNames: roomName[roomId],
+        });
       }
-      socket.to(roomId).emit("user-joined", { peerId });
-      socket.emit("user-joined", { peerId });
-      socket.to(roomId).emit("get-users", {
-        roomId,
-        participants: rooms[roomId],
-        memberNames: roomName[roomId],
-      });
-      socket.emit("get-users", {
-        roomId,
-        participants: rooms[roomId],
-        memberNames: roomName[roomId],
-      });
     } else {
       socket.emit("invalid-room", { roomId });
     }
 
     socket.on("start-request", ({ roomId }) => {
-      // roomConfig[roomId] = {
-      //   ...roomConfig[roomId],
-      //   hasStarted: true,
-      // };
+      console.log(roomConfig[roomId])
       socket.to(roomId).emit("start-game", { roomId });
       socket.emit("start-game", { roomId });
     });

@@ -5,10 +5,13 @@ const { Server } = require("socket.io");
 const port = 8080;
 const cors = require("cors");
 const { roomHandler } = require("./room/index");
+const { gameHandler } = require("./game");
 
 const server = http.createServer(app);
 app.use(cors);
-
+const rooms = {};
+const roomName = {};
+const roomConfig = {};
 const io = new Server(server, {
   cors: {
     origin: "*",
@@ -19,8 +22,8 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log("User Connected");
 
-  roomHandler(socket);
-
+  roomHandler(socket,rooms,roomName,roomConfig);
+  gameHandler(socket,rooms,roomName,roomConfig);
   socket.on("disconnect", () => {
     console.log("User Disconnected");
   });
