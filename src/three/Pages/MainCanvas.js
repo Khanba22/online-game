@@ -44,6 +44,7 @@ const MainCanvas = () => {
       <Canvas>
         <Scene />
       </Canvas>
+      
       <Crosshair />
     </div>
   );

@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import Room from "./pages/Room";
 import "./App.css";
 import GamePage from "./pages/GamePage";
+import GameUI from "./three/UI/GameUI";
 
 const App = () => {
   return (

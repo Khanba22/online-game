@@ -14,6 +14,7 @@ export const RoomProvider = ({ children }) => {
   const [joined, setJoined] = useState(false);
   const navigate = useNavigate();
   const [me, setMe] = useState();
+  const [myData,setMyData] = useState({})
   const [peers, dispatch] = useReducer(peerReducer, {});
   const [roomId, setRoomId] = useState("");
   const [name, setName] = useState("");
@@ -99,6 +100,8 @@ export const RoomProvider = ({ children }) => {
         setPlayerData,
         isAdmin,
         setIsAdmin,
+        myData,
+        setMyData
       }}
     >
       {children}

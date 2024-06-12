@@ -1,20 +1,18 @@
-import React, { useContext, useEffect  } from "react";
+import React, { useContext, useEffect } from "react";
 // import { useParams } from "react-router-dom";
 import { RoomContext } from "../contexts/socketContext";
 import MainCanvas from "../three/Pages/MainCanvas";
 
 const GamePage = () => {
   // const { id } = useParams();
-  const { ws, roomId, isAdmin } =
-    useContext(RoomContext);
-
+  const { ws, roomId, isAdmin } = useContext(RoomContext);
 
   const startNextRound = () => {
     ws.emit("start-round", { roomId });
   };
 
   useEffect(() => {
-    ws.on("round-started", ({ bulletArr }) => {
+    ws.on("round-started", ({ bulletArr, equipments }) => {
       var liveCount = 0;
       bulletArr.forEach((bullet) => {
         if (bullet) {
@@ -28,9 +26,9 @@ const GamePage = () => {
           bulletArr.length - liveCount
         }`
       );
+      console.log(equipments);
     });
   }, [ws]);
-
 
   return (
     <>
