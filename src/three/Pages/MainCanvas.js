@@ -12,7 +12,8 @@ const Scene = () => {
     <>
       <ambientLight intensity={2} />
       <pointLight position={[10, 10, 10]} />
-      {playerData.map((player,index) => {
+      {Object.keys(playerData).map((key,index) => {
+        const player = playerData[key]
         if (player.lives === 0) {
           return <Box key={index} position={player.position} userData={player} args={[1, 1, 1]}>
             <meshStandardMaterial attach="material" color="white" />

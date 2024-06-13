@@ -8,18 +8,18 @@ import { addPeerAction, removePeerAction } from "./peerActions";
 const WS = "http://localhost:8080";
 
 export const RoomContext = createContext(null);
-const ws = socketIoClient(WS, { reconnection: false });
+const ws = socketIoClient(WS);
 
 export const RoomProvider = ({ children }) => {
   const [joined, setJoined] = useState(false);
   const navigate = useNavigate();
   const [me, setMe] = useState();
-  const [myData,setMyData] = useState({})
+  const [myData, setMyData] = useState({});
   const [peers, dispatch] = useReducer(peerReducer, {});
   const [roomId, setRoomId] = useState("");
   const [name, setName] = useState("");
   const [stream, setStream] = useState(null);
-  const [playerData, setPlayerData] = useState([]);
+  const [playerData, setPlayerData] = useState({});
   const [isAdmin, setIsAdmin] = useState(false);
   const enterRoom = ({ roomId }) => {
     navigate(`/room/${roomId}`);
@@ -31,9 +31,30 @@ export const RoomProvider = ({ children }) => {
   };
 
   const getUsers = ({ roomId, memberNames }) => {
-    console.log(memberNames);
     setRoomId(roomId);
     setPlayerData(memberNames);
+    setMyData(memberNames[name])
+    console.log("My Data")
+    console.log(name)
+    console.log(memberNames)
+    console.log(memberNames[name])
+  };
+
+  const roundStart = ({ bulletArr, equipments }) => {
+    var liveCount = 0;
+    bulletArr.forEach((bullet) => {
+      if (bullet) {
+        liveCount += 1;
+      }
+    });
+    console.log(
+      `No Of Bullets : ${
+        bulletArr.length
+      }, Live Rounds : ${liveCount}, Fake Rounds : ${
+        bulletArr.length - liveCount
+      }`
+    );
+    console.log(equipments);
   };
 
   const startGame = ({ roomId }) => {
@@ -45,6 +66,10 @@ export const RoomProvider = ({ children }) => {
     const meId = uuidv4();
     const peer = new Peer(meId);
     setMe(peer);
+    if (!peer) {
+      alert("Peer Connection Failed");
+      return;
+    }
     try {
       navigator.mediaDevices
         .getUserMedia({ audio: true, video: false })
@@ -61,6 +86,7 @@ export const RoomProvider = ({ children }) => {
     ws.on("invalid-room", () => {
       alert("The Room Code Is Invalid Or The Game has Already Started");
     });
+    ws.on("round-started", roundStart);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -101,7 +127,7 @@ export const RoomProvider = ({ children }) => {
         isAdmin,
         setIsAdmin,
         myData,
-        setMyData
+        setMyData,
       }}
     >
       {children}

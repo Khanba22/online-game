@@ -6,7 +6,7 @@ const roomHandler = (socket, rooms, roomName, roomConfig) => {
   const createRoom = () => {
     const roomId = v4();
     rooms[roomId] = [];
-    roomName[roomId] = [];
+    roomName[roomId] = {};
     roomConfig[roomId] = {
       turn:0,
       rounds:3,
@@ -36,7 +36,8 @@ const roomHandler = (socket, rooms, roomName, roomConfig) => {
           color: colorArr[roomConfig[roomId].memberNo],
           position:positions[roomConfig[roomId].memberNo],
         };
-        roomName[roomId].push(config);
+        roomName[roomId][name] = config;
+        console.log(roomName[roomId]);
         rooms[roomId].push(peerId);
         socket.to(roomId).emit("user-joined", { peerId });
         roomConfig[roomId].memberNo = roomConfig[roomId].memberNo + 1;
@@ -57,14 +58,14 @@ const roomHandler = (socket, rooms, roomName, roomConfig) => {
     }
 
     socket.on("start-request", ({ roomId }) => {
-      console.log(roomConfig[roomId])
       socket.to(roomId).emit("start-game", { roomId });
       socket.emit("start-game", { roomId });
     });
 
     socket.on("disconnect", () => {
       rooms[roomId] = rooms[roomId].filter((id) => id !== peerId);
-      roomName[roomId] = roomName[roomId].filter((id) => id !== name);
+      delete roomName[roomId][name]
+      console.log(roomName[roomId])
       socket
         .to(roomId)
         .emit("user-disconnected", { peerId, members: roomName[roomId] });

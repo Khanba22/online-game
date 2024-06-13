@@ -5,17 +5,29 @@ import AudioControls from "../components/AudioControls";
 
 const Room = () => {
   const { id } = useParams();
-  const { setName, name, joined, setJoined, setIsAdmin, isAdmin } =
-    useContext(RoomContext);
-  const { ws, me, roomId, playerData } = useContext(RoomContext);
+  const {
+    setMyData,
+    myData,
+    setName,
+    name,
+    joined,
+    setJoined,
+    setIsAdmin,
+    isAdmin,
+    ws,
+    me,
+    roomId,
+    playerData,
+  } = useContext(RoomContext);
   const startGame = () => {
     ws.emit("start-request", { roomId });
   };
   useEffect(() => {
-    if (joined && playerData[0]) {
-      setIsAdmin(playerData[0].username === name);
+    if (joined && Object.keys(playerData).length > 0) {
+      setIsAdmin(Object.keys(playerData)[0] === name);
+      setMyData(playerData[name])
     }
-  }, [joined, name, playerData, setIsAdmin]);
+  }, [joined, name, playerData, setIsAdmin,setMyData]);
   useEffect(() => {
     if (me && joined) {
       ws.emit("join-room", { roomId: id, peerId: me._id, name });
@@ -27,6 +39,10 @@ const Room = () => {
       {joined ? (
         <>
           <AudioControls />
+          <button
+            className="bg-teal-500 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition duration-300"
+            onClick={()=>{console.log(myData)}}
+          >Log My Data</button>
           {isAdmin && (
             <button
               className="bg-teal-500 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition duration-300"

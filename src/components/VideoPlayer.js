@@ -32,7 +32,7 @@ const VideoPlayer = ({ stream, name, isAdmin, you }) => {
         className="w-1/4 h-auto -z-10"
       ></video>
       <div className="flex items-center justify-between flex-1">
-        <h2 className="text-xl font-semibold">
+        <h2 className="text-xl font-semibold w-1/5">
           {!you ? name : "You"} {isAdmin && "(Admin)"}
         </h2>
         <input

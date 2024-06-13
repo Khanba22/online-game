@@ -1,9 +1,10 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { RoomContext } from "../contexts/socketContext";
 import VideoPlayer from "../components/VideoPlayer";
 
 const AudioControls = () => {
   const { roomId,playerData, stream, peers, name } = useContext(RoomContext);
+
 
   return (
     <div className="h-full flex justify-center w-screen mx-auto p-10">
@@ -13,15 +14,14 @@ const AudioControls = () => {
         </h2>
         <div className="space-y-4 my-2">
           {Object.values(peers).map((peer, i) => {
-            const isYou = playerData[i].username === name;
-            console.log(playerData[i])
+            const isYou = Object.keys(playerData)[i] === name;
             return (
               <VideoPlayer
                 you={isYou}
                 key={i}
                 isAdmin={i === 0}
                 stream={isYou ? stream : peer.stream}
-                name={playerData[i].username}
+                name={Object.keys(playerData)[i]}
               />
             );
           })}
