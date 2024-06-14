@@ -22,12 +22,12 @@ const roomHandler = (socket, rooms, roomName, roomConfig) => {
     socket.join(roomId);
     socket.emit("room-created", { roomId });
   };
-  const joinRoom = ({ roomId, peerId, name }) => {
+  const joinRoom = ({ roomId, peerId, username }) => {
     if (rooms[roomId] && !roomConfig[roomId].hasStarted) {
       socket.join(roomId);
       if (!rooms[roomId].includes(peerId)) {
         const config = {
-          username: name,
+          username: username,
           lives: 5,
           equipment: {
             shield: 0,
@@ -42,7 +42,7 @@ const roomHandler = (socket, rooms, roomName, roomConfig) => {
           color: colorArr[roomConfig[roomId].memberNo],
           position: positions[roomConfig[roomId].memberNo],
         };
-        roomName[roomId][name] = config;
+        roomName[roomId][username] = config;
         console.log(roomName[roomId]);
         rooms[roomId].push(peerId);
         socket.to(roomId).emit("user-joined", { peerId });
@@ -71,7 +71,7 @@ const roomHandler = (socket, rooms, roomName, roomConfig) => {
     socket.on("disconnect", () => {
       try {
         rooms[roomId] = rooms[roomId].filter((id) => id !== peerId);
-        delete roomName[roomId][name];
+        delete roomName[roomId][username];
         console.log(roomName[roomId]);
         socket
           .to(roomId)

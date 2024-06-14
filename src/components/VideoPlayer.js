@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { microphone, muteMic, speaker, speakerMute } from "../assets/index";
 
-const VideoPlayer = ({ stream, name, isAdmin, you }) => {
+const VideoPlayer = ({ stream, username, isAdmin, you }) => {
   const [muted, setMute] = useState(true);
   const videoRef = useRef(null);
   const [volume, setVolume] = useState(10); // Change initial volume to be in the range 0-10
@@ -33,7 +33,7 @@ const VideoPlayer = ({ stream, name, isAdmin, you }) => {
       ></video>
       <div className="flex items-center justify-between flex-1">
         <h2 className="text-xl font-semibold w-1/5">
-          {!you ? name : "You"} {isAdmin && "(Admin)"}
+          {!you ? username : "You"} {isAdmin && "(Admin)"}
         </h2>
         <input
           type="range"

@@ -5,19 +5,23 @@ import socketIoClient from "socket.io-client";
 import { v4 as uuidv4 } from "uuid";
 import { peerReducer } from "./peerReducer";
 import { addPeerAction, removePeerAction } from "./peerActions";
+import { useDispatch, useSelector } from "react-redux";
+import { addEquipment, setPlayer } from "../redux/PlayerDataReducer";
 const WS = "http://localhost:8080";
 
 export const RoomContext = createContext(null);
 const ws = socketIoClient(WS);
-
 export const RoomProvider = ({ children }) => {
   const [joined, setJoined] = useState(false);
   const navigate = useNavigate();
   const [me, setMe] = useState();
-  const [myData, setMyData] = useState({});
-  const [peers, dispatch] = useReducer(peerReducer, {});
+  // const [myData, setMyData] = useState({});
+  const myPlayerData = useSelector((state) => state.myPlayerData);
+  const { username } = myPlayerData;
+  const dispatch = useDispatch();
+  const [peers, dispatched] = useReducer(peerReducer, {});
   const [roomId, setRoomId] = useState("");
-  const [name, setName] = useState("");
+  // const [name, setName] = useState("");
   const [stream, setStream] = useState(null);
   const [playerData, setPlayerData] = useState({});
   const [isAdmin, setIsAdmin] = useState(false);
@@ -27,35 +31,20 @@ export const RoomProvider = ({ children }) => {
 
   const removePeer = ({ peerId }) => {
     setRoomId(roomId);
-    dispatch(removePeerAction(peerId));
+    dispatched(removePeerAction(peerId));
   };
 
   const getUsers = ({ roomId, memberNames }) => {
     setRoomId(roomId);
     setPlayerData(memberNames);
-    setMyData(memberNames[name])
-    console.log("My Data")
-    console.log(name)
-    console.log(memberNames)
-    console.log(memberNames[name])
+    dispatch({
+      type: `${setPlayer}`,
+      payload: {
+        data: memberNames[username],
+      },
+    });
   };
 
-  const roundStart = ({ bulletArr, equipments }) => {
-    var liveCount = 0;
-    bulletArr.forEach((bullet) => {
-      if (bullet) {
-        liveCount += 1;
-      }
-    });
-    console.log(
-      `No Of Bullets : ${
-        bulletArr.length
-      }, Live Rounds : ${liveCount}, Fake Rounds : ${
-        bulletArr.length - liveCount
-      }`
-    );
-    console.log(equipments);
-  };
 
   const startGame = ({ roomId }) => {
     setRoomId(roomId);
@@ -86,7 +75,6 @@ export const RoomProvider = ({ children }) => {
     ws.on("invalid-room", () => {
       alert("The Room Code Is Invalid Or The Game has Already Started");
     });
-    ws.on("round-started", roundStart);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -97,14 +85,14 @@ export const RoomProvider = ({ children }) => {
     ws.on("user-joined", ({ peerId }) => {
       const call = me.call(peerId, stream);
       call.on("stream", (peerStream) => {
-        dispatch(addPeerAction(peerId, peerStream));
+        dispatched(addPeerAction(peerId, peerStream));
       });
     });
 
     me.on("call", (call) => {
       call.answer(stream);
       call.on("stream", (peerStream) => {
-        dispatch(addPeerAction(call.peer, peerStream));
+        dispatched(addPeerAction(call.peer, peerStream));
       });
     });
   }, [me, stream]);
@@ -118,16 +106,12 @@ export const RoomProvider = ({ children }) => {
         setRoomId,
         stream,
         peers,
-        name,
-        setName,
         joined,
         setJoined,
         playerData,
         setPlayerData,
         isAdmin,
         setIsAdmin,
-        myData,
-        setMyData,
       }}
     >
       {children}

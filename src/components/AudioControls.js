@@ -1,10 +1,12 @@
 import React, { useContext, useEffect } from "react";
 import { RoomContext } from "../contexts/socketContext";
 import VideoPlayer from "../components/VideoPlayer";
+import { useSelector } from "react-redux";
 
 const AudioControls = () => {
-  const { roomId,playerData, stream, peers, name } = useContext(RoomContext);
-
+  const { roomId, playerData, stream, peers } = useContext(RoomContext);
+  const data = useSelector(state => state.myPlayerData);
+  const { username } = data;
 
   return (
     <div className="h-full flex justify-center w-screen mx-auto p-10">
@@ -14,14 +16,14 @@ const AudioControls = () => {
         </h2>
         <div className="space-y-4 my-2">
           {Object.values(peers).map((peer, i) => {
-            const isYou = Object.keys(playerData)[i] === name;
+            const isYou = Object.keys(playerData)[i] === username;
             return (
               <VideoPlayer
                 you={isYou}
                 key={i}
                 isAdmin={i === 0}
                 stream={isYou ? stream : peer.stream}
-                name={Object.keys(playerData)[i]}
+                username={Object.keys(playerData)[i]}
               />
             );
           })}

@@ -5,14 +5,18 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { BrowserRouter } from "react-router-dom";
 import { RoomProvider } from "./contexts/socketContext";
+import { Provider } from "react-redux";
+import Store from "./redux/Store";
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(
   <React.StrictMode>
     <BrowserRouter>
-      <RoomProvider>
-        <App />
-      </RoomProvider>
+      <Provider store={Store}>
+        <RoomProvider>
+          <App />
+        </RoomProvider>
+      </Provider>
     </BrowserRouter>
   </React.StrictMode>
 );

@@ -1,5 +1,5 @@
 const equipmentList = [
-  "heal",
+  "heals",
   "looker",
   "shield",
   "doubleDamage",
@@ -16,19 +16,19 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
       bulletArr.push(isLive);
     }
 
-    Object.keys(roomName[roomId]).forEach(member => {
-      equipments[member] = {}
+    Object.keys(roomName[roomId]).forEach((member) => {
+      equipments = { ...equipments, [member]: {} };
       for (let index = 0; index < 2; index++) {
-        const index = Math.floor(Math.random()*5)
+        const index = Math.floor(Math.random() * 5);
         if (equipments[member] && equipments[member][equipmentList[index]]) {
-          equipments[member][equipmentList[index]] +=1
-        }else{
-          equipments[member][equipmentList[index]] = 1
+          equipments[member][equipmentList[index]] += 1;
+        } else {
+          equipments[member][equipmentList[index]] = 1;
         }
       }
-    })
+    });
     console.log(roomName[roomId]);
-    console.log("Equipments",equipments)
+    console.log("Equipments", equipments);
     roomConfig[roomId].bulletArr = bulletArr;
     socket.emit("round-started", { bulletArr, equipments });
   };
