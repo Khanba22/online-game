@@ -80,7 +80,7 @@ export const RoomProvider = ({ children }) => {
     ws.on("get-users", getUsers);
     ws.on("user-disconnected", removePeer);
     ws.on("invalid-room", () => {
-      alert("The Room Code Is Invalid Or The Game has Already Started");
+      console.error("The Room Code Is Invalid Or The Game has Already Started");
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

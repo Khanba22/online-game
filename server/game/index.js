@@ -27,6 +27,7 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
         }
       }
     });
+    console.log(equipments);
     roomConfig[roomId].bulletArr = bulletArr;
     socket.emit("round-started", { bulletArr, equipments });
     socket.to(roomId).emit("round-started", { bulletArr, equipments });

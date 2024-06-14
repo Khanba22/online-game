@@ -37,8 +37,12 @@ const GamePage = () => {
 
   useEffect(() => {
     ws.on("round-started", roundStart);
+
+    return () => {
+      ws.off("round-started", roundStart);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ws]);
+  }, []);
 
   const startNextRound = () => {
     ws.emit("start-round", { roomId });

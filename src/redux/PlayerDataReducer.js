@@ -39,7 +39,7 @@ const myPlayerData = createSlice({
         Object.keys(action.payload.equipment).forEach((key) => {
           tempState = {
             ...tempState,
-            [key]: action.payload.equipment[key],
+            [key]: action.payload.equipment[key] + tempState[key],
           };
         });
       } else {
