@@ -7,20 +7,32 @@ import Crosshair from "../components/Crosshair";
 import { RoomContext } from "../../contexts/socketContext";
 
 const Scene = () => {
-  const { playerData , setPlayerData } = useContext(RoomContext);
+  const { playerData, setPlayerData } = useContext(RoomContext);
   return (
     <>
       <ambientLight intensity={2} />
       <pointLight position={[10, 10, 10]} />
-      {Object.keys(playerData).map((key,index) => {
-        const player = playerData[key]
+      {Object.keys(playerData).map((key, index) => {
+        const player = playerData[key];
         if (player.lives === 0) {
-          return <Box key={index} position={player.position} userData={player} args={[1, 1, 1]}>
-            <meshStandardMaterial attach="material" color="white" />
-          </Box>;
+          return (
+            <Box
+              key={index}
+              position={player.position}
+              userData={player}
+              args={[1, 1, 1]}
+            >
+              <meshStandardMaterial attach="material" color="white" />
+            </Box>
+          );
         } else {
           return (
-            <Box key={index} position={player.position} userData={player} args={[1, 1, 1]}>
+            <Box
+              key={index}
+              position={player.position}
+              userData={player}
+              args={[1, 1, 1]}
+            >
               <meshStandardMaterial attach="material" color={player.color} />
             </Box>
           );
@@ -33,7 +45,10 @@ const Scene = () => {
       >
         <meshStandardMaterial attach="material" color="orange" />
       </Icosahedron>
-      <RaycasterComponent playerData = {playerData} setPlayerData = {setPlayerData} />
+      <RaycasterComponent
+        playerData={playerData}
+        setPlayerData={setPlayerData}
+      />
       <PointerLockControls />
     </>
   );
@@ -45,10 +60,10 @@ const MainCanvas = () => {
       <Canvas>
         <Scene />
       </Canvas>
-      
+
       <Crosshair />
     </div>
   );
 };
 
-export default MainCanvas ;
+export default MainCanvas;

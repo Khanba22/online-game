@@ -37,8 +37,56 @@ const OtherPlayerData = createSlice({
         },
       };
     },
+    usePlayerEquipment: (state, action) => {
+      const { user, equipmentType } = action.payload;
+      var effect = "";
+      switch (equipmentType) {
+        case "shield":
+          effect = "isShielded";
+          break;
+        case "doubleDamage":
+          effect = "hasDoubleDamage";
+          break;
+        case "looker":
+          effect = "canLookBullet";
+          break;
+        case "heals":
+          effect = "healing";
+          break;
+        case "doubleTurn":
+          effect = "hasDoubleTurn";
+          break;
+        default:
+          return state;
+      }
+      if (effect === "healing") {
+        return {
+          ...state,
+          [user]: {
+            ...state[user],
+            equipment: {
+              ...state[user].equipment,
+              [equipmentType]: state[user].equipment[equipmentType] - 1,
+            },
+            lives: state[user].lives + 1,
+          },
+        };
+      }
+      return {
+        ...state,
+        [user]: {
+          ...state[user],
+          equipment: {
+            ...state[user].equipment,
+            [equipmentType]: state[user].equipment[equipmentType] - 1,
+          },
+          [effect]: true,
+        },
+      };
+    },
   },
 });
 
-export const { setOtherPlayer } = OtherPlayerData.actions;
+export const { setOtherPlayer, usePlayerEquipment, reduceLife } =
+  OtherPlayerData.actions;
 export default OtherPlayerData.reducer;

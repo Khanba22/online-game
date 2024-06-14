@@ -1,17 +1,26 @@
 import { useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
 import { Raycaster, Vector3 } from "three";
-
+import { RoomContext } from "../../contexts/socketContext";
 
 const RaycasterComponent = ({ playerData, setPlayerData }) => {
   const { camera, scene } = useThree();
+  const { ws, roomId } = useContext(RoomContext);
   const raycaster = useRef(new Raycaster());
   const direction = new Vector3();
   const [intersectedObject, setIntersectedObject] = useState(null);
-
+  const data = useSelector((state) => state.myPlayerData);
   const handleClick = () => {
     if (intersectedObject) {
-      
+      ws.emit("shoot-player", {
+        shooter: data.username,
+        victim: intersectedObject.userData.username,
+        roomId,
+      });
+      console.log(
+        `${data.username} Shot ${intersectedObject.userData.username}`
+      );
     }
   };
 
@@ -20,7 +29,7 @@ const RaycasterComponent = ({ playerData, setPlayerData }) => {
     return () => {
       window.removeEventListener("click", handleClick);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [intersectedObject]);
 
   useFrame(() => {
