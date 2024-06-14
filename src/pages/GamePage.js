@@ -37,6 +37,7 @@ const GamePage = () => {
 
   useEffect(() => {
     ws.on("round-started", roundStart);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ws]);
 
   const startNextRound = () => {
