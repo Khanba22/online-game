@@ -8,9 +8,10 @@ import { setName, setPlayer } from "../redux/PlayerDataReducer";
 const Room = () => {
   const dispatch = useDispatch();
   const data = useSelector((state) => state.myPlayerData);
+  const playerData = useSelector((state) => state.otherPlayerData);
   const { username } = data;
   const { id } = useParams();
-  const { joined, setJoined, setIsAdmin, isAdmin, ws, me, roomId, playerData } =
+  const { joined, setJoined, setIsAdmin, isAdmin, ws, me, roomId } =
     useContext(RoomContext);
   const startGame = () => {
     ws.emit("start-request", { roomId });
@@ -24,7 +25,7 @@ const Room = () => {
         payload: { data: playerData[username] },
       });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [joined, username, playerData, dispatch]);
   useEffect(() => {
     if (me && joined) {
@@ -40,7 +41,7 @@ const Room = () => {
           <button
             className="bg-teal-500 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition duration-300"
             onClick={() => {
-              console.log(data);
+              console.log(playerData);
             }}
           >
             Log My Data

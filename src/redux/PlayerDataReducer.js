@@ -8,7 +8,7 @@ const myPlayerData = createSlice({
     equipment: {
       shield: 0,
       doubleDamage: 0,
-      heal: 0,
+      heals: 0,
       looker: 0,
       doubleTurn: 0,
     },
@@ -29,7 +29,7 @@ const myPlayerData = createSlice({
     addEquipment: (state, action) => {
       console.log(action.payload.equipment);
       var tempState = {
-        heals: state.equipment.heal,
+        heals: state.equipment.heals,
         doubleDamage: state.equipment.doubleDamage,
         looker: state.equipment.looker,
         doubleTurn: state.equipment.doubleTurn,
@@ -94,7 +94,7 @@ const myPlayerData = createSlice({
             ...state,
             equipment: {
               ...state.equipment,
-              heal: state.equipment.heal - 1,
+              heals: state.equipment.heals - 1,
             },
             lives: state.lives + 1,
           };

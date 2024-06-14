@@ -7,6 +7,7 @@ import { peerReducer } from "./peerReducer";
 import { addPeerAction, removePeerAction } from "./peerActions";
 import { useDispatch, useSelector } from "react-redux";
 import { setPlayer } from "../redux/PlayerDataReducer";
+import { setOtherPlayer } from "../redux/AllPlayerReducer";
 const WS = "http://localhost:8080";
 
 export const RoomContext = createContext(null);
@@ -37,6 +38,12 @@ export const RoomProvider = ({ children }) => {
   const getUsers = ({ roomId, memberNames }) => {
     setRoomId(roomId);
     setPlayerData(memberNames);
+    dispatch({
+      type:`${setOtherPlayer}`,
+      payload:{
+        data: memberNames,
+      }
+    })
     dispatch({
       type: `${setPlayer}`,
       payload: {

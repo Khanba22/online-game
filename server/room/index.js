@@ -32,7 +32,7 @@ const roomHandler = (socket, rooms, roomName, roomConfig) => {
           equipment: {
             shield: 0,
             doubleDamage: 0,
-            heal: 0,
+            heals: 0,
             looker: 0,
             doubleTurn: 0,
           },
