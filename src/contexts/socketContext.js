@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import { peerReducer } from "./peerReducer";
 import { addPeerAction, removePeerAction } from "./peerActions";
 import { useDispatch, useSelector } from "react-redux";
-import { addEquipment, setPlayer } from "../redux/PlayerDataReducer";
+import { setPlayer } from "../redux/PlayerDataReducer";
 const WS = "http://localhost:8080";
 
 export const RoomContext = createContext(null);

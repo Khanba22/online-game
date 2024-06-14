@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext } from "react";
 import { RoomContext } from "../contexts/socketContext";
 import VideoPlayer from "../components/VideoPlayer";
 import { useSelector } from "react-redux";

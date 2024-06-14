@@ -24,6 +24,7 @@ const Room = () => {
         payload: { data: playerData[username] },
       });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [joined, username, playerData, dispatch]);
   useEffect(() => {
     if (me && joined) {

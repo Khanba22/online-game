@@ -8,7 +8,7 @@ import { addEquipment } from "../redux/PlayerDataReducer";
 
 const GamePage = () => {
   // const { id } = useParams();
-  const { ws, roomId, isAdmin, playerData } = useContext(RoomContext);
+  const { ws, roomId, isAdmin } = useContext(RoomContext);
   const dispatch = useDispatch();
   const data = useSelector((state) => state.myPlayerData);
   const { username } = data;
