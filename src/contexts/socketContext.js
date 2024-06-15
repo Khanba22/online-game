@@ -16,16 +16,14 @@ export const RoomProvider = ({ children }) => {
   const [joined, setJoined] = useState(false);
   const navigate = useNavigate();
   const [me, setMe] = useState();
-  // const [myData, setMyData] = useState({});
   const myPlayerData = useSelector((state) => state.myPlayerData);
   const { username } = myPlayerData;
   const dispatch = useDispatch();
   const [peers, dispatched] = useReducer(peerReducer, {});
   const [roomId, setRoomId] = useState("");
-  // const [name, setName] = useState("");
   const [stream, setStream] = useState(null);
-  const [playerData, setPlayerData] = useState({});
   const [isAdmin, setIsAdmin] = useState(false);
+  const [turn,setTurn] = useState(0);
   const enterRoom = ({ roomId }) => {
     navigate(`/room/${roomId}`);
   };
@@ -37,7 +35,6 @@ export const RoomProvider = ({ children }) => {
 
   const getUsers = ({ roomId, memberNames }) => {
     setRoomId(roomId);
-    setPlayerData(memberNames);
     dispatch({
       type: `${setOtherPlayer}`,
       payload: {
@@ -114,10 +111,10 @@ export const RoomProvider = ({ children }) => {
         peers,
         joined,
         setJoined,
-        playerData,
-        setPlayerData,
         isAdmin,
         setIsAdmin,
+        turn,
+        setTurn
       }}
     >
       {children}

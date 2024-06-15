@@ -9,12 +9,13 @@ import { reduceLife } from "../redux/AllPlayerReducer";
 
 const GamePage = () => {
   // const { id } = useParams();
-  const { ws, roomId, isAdmin } = useContext(RoomContext);
+  const { ws, roomId, isAdmin , setTurn , turn } = useContext(RoomContext);
   const dispatch = useDispatch();
   const data = useSelector((state) => state.myPlayerData);
+  const playerData = useSelector(state=>state.otherPlayerData)
   const { username } = data;
 
-  const shotPlayer = ({ shooter, victim, livesTaken }) => {
+  const shotPlayer = ({ shooter, victim, livesTaken , turn }) => {
     if (victim === username) {
       dispatch({
         type: `${reduceMyLife}`,
@@ -30,6 +31,7 @@ const GamePage = () => {
         liveCount: livesTaken,
       },
     });
+    setTurn(turn);
   };
   const roundStart = ({ bulletArr, equipments }) => {
     var liveCount = 0;
@@ -63,6 +65,13 @@ const GamePage = () => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const players = Object.keys(playerData)
+    if (players[turn] === username) {
+      // alert("Its Your Turn Now")
+    }
+  },[turn])
 
   const startNextRound = () => {
     ws.emit("start-round", { roomId });

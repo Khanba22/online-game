@@ -6,18 +6,27 @@ import { RoomContext } from "../../contexts/socketContext";
 
 const RaycasterComponent = ({ camera }) => {
   const { scene } = useThree();
-  const { ws, roomId } = useContext(RoomContext);
+  const { ws, roomId, turn } = useContext(RoomContext);
   const raycaster = useRef(new Raycaster());
   const direction = new Vector3();
   const [intersectedObject, setIntersectedObject] = useState(null);
   const data = useSelector((state) => state.myPlayerData);
+  const allPlayerData = useSelector((state) => state.otherPlayerData);
   const handleClick = () => {
-    if (intersectedObject && intersectedObject.userData && intersectedObject.userData.username) {
-      ws.emit("shoot-player", {
-        shooter: data.username,
-        victim: intersectedObject.userData.username,
-        roomId,
-      });
+    const players = Object.keys(allPlayerData);
+    if (intersectedObject?.userData?.username) {
+      console.log(`Current Turn ${players[turn]}`);
+      if (intersectedObject.userData.lives > 0) {
+        if (players[turn] === data.username) {
+          ws.emit("shoot-player", {
+            shooter: data.username,
+            victim: intersectedObject.userData.username,
+            roomId,
+          });
+        }else{
+          console.log(`Shot Not Taken By ${data.username}`)
+        }
+      }
     }
   };
 

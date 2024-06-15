@@ -27,7 +27,6 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
         }
       }
     });
-    console.log(equipments);
     roomConfig[roomId].bulletArr = bulletArr;
     socket.emit("round-started", {
       bulletArr,
@@ -41,6 +40,20 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
     });
   };
 
+  const decideTurn = (roomId) => {
+    const gameDetails = roomConfig[roomId];
+    const players = Object.keys(roomName);
+    var turn = (gameDetails.turn + 1) % gameDetails.memberNo;
+    while (true) {
+      if (roomName[players[turn]].lives === 0) {
+        turn = (turn + 1) % gameDetails.memberNo;
+      } else {
+        break;
+      }
+    }
+    gameDetails.turn = (gameDetails.turn + 1) % gameDetails.memberNo;
+  };
+
   const shootPlayer = ({ shooter, victim, roomId }) => {
     const gameDetails = roomConfig[roomId];
     try {
@@ -48,28 +61,32 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
       const damage = room[shooter].hasDoubleDamage ? 2 : 1;
       var livesTaken = 0;
       if (!shooter.hasDoubleTurn) {
-        gameDetails.turn = (gameDetails.turn + 1) % gameDetails.memberNo;
+        decideTurn(roomId);
       }
       if (!room[victim].hasShield) {
         room[victim].lives -= damage;
         livesTaken = damage;
       }
-      
-      socket
-        .to(roomId)
-        .emit("player-shot", {
-          shooter,
-          victim,
-          livesTaken: livesTaken,
-          turn: gameDetails.turn,
-        });
-        socket
-        .emit("player-shot", {
-          shooter,
-          victim,
-          livesTaken: livesTaken,
-          turn: gameDetails.turn,
-        });
+      room[shooter] = {
+        ...room[shooter],
+        hasDoubleDamage: false,
+        hasDoubleTurn: false,
+        canLookBullet: false,
+      };
+      room[victim] = { ...room[victim], hasShield: false };
+
+      socket.to(roomId).emit("player-shot", {
+        shooter,
+        victim,
+        livesTaken: livesTaken,
+        turn: gameDetails.turn,
+      });
+      socket.emit("player-shot", {
+        shooter,
+        victim,
+        livesTaken: livesTaken,
+        turn: gameDetails.turn,
+      });
     } catch (error) {
       console.log(error);
     }

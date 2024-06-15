@@ -5,25 +5,9 @@ import "./styles.css"; // Import the styles for the crosshair
 import RaycasterComponent from "../components/RayCaster";
 import Crosshair from "../components/Crosshair";
 import { useSelector } from "react-redux";
+import PlayerComponent from "../components/PlayerComponent";
 
-const PlayerBox = ({ player, key }) => {
-  return (
-    <>
-      {!player.lives <= 0 && (
-        <>
-          <Box
-            key={key}
-            position={player.position}
-            userData={player}
-            args={[1, 1, 1]}
-          >
-            <meshStandardMaterial attach="material" color={player.color} />
-          </Box>
-        </>
-      )}
-    </>
-  );
-};
+
 
 const Scene = () => {
   const { camera } = useThree();
@@ -41,7 +25,7 @@ const Scene = () => {
       <pointLight position={[10, 10, 10]} />
       {Object.keys(playerData).map((key) => {
         const player = playerData[key];
-        return <PlayerBox key={key} player={player} />;
+        return <PlayerComponent key={key} player={player} />;
       })}
       <Icosahedron
         userData={{ lives: 10 }}
