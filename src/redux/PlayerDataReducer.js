@@ -27,7 +27,6 @@ const myPlayerData = createSlice({
       };
     },
     addEquipment: (state, action) => {
-      console.log(action.payload.equipment);
       var tempState = {
         heals: state.equipment.heals,
         doubleDamage: state.equipment.doubleDamage,

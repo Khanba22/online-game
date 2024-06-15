@@ -29,22 +29,47 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
     });
     console.log(equipments);
     roomConfig[roomId].bulletArr = bulletArr;
-    socket.emit("round-started", { bulletArr, equipments });
-    socket.to(roomId).emit("round-started", { bulletArr, equipments });
+    socket.emit("round-started", {
+      bulletArr,
+      equipments,
+      turn: roomConfig[roomId].turn,
+    });
+    socket.to(roomId).emit("round-started", {
+      bulletArr,
+      equipments,
+      turn: roomConfig[roomId].turn,
+    });
   };
 
   const shootPlayer = ({ shooter, victim, roomId }) => {
+    const gameDetails = roomConfig[roomId];
     try {
       const room = roomName[roomId];
       const damage = room[shooter].hasDoubleDamage ? 2 : 1;
       var livesTaken = 0;
+      if (!shooter.hasDoubleTurn) {
+        gameDetails.turn = (gameDetails.turn + 1) % gameDetails.memberNo;
+      }
       if (!room[victim].hasShield) {
         room[victim].lives -= damage;
         livesTaken = damage;
       }
+      
       socket
         .to(roomId)
-        .emit("player-shot", { shooter, victim, livesTaken: livesTaken });
+        .emit("player-shot", {
+          shooter,
+          victim,
+          livesTaken: livesTaken,
+          turn: gameDetails.turn,
+        });
+        socket
+        .emit("player-shot", {
+          shooter,
+          victim,
+          livesTaken: livesTaken,
+          turn: gameDetails.turn,
+        });
     } catch (error) {
       console.log(error);
     }

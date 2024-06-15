@@ -64,6 +64,7 @@ const roomHandler = (socket, rooms, roomName, roomConfig) => {
     }
 
     socket.on("start-request", ({ roomId }) => {
+      roomConfig[roomId].hasStarted = true
       socket.to(roomId).emit("start-game", { roomId });
       socket.emit("start-game", { roomId });
     });

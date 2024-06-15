@@ -1,56 +1,47 @@
-import React, { useContext } from "react";
+import React from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import {
-  PointerLockControls,
-  Box,
-  Icosahedron,
-} from "@react-three/drei";
+import { PointerLockControls, Box, Icosahedron } from "@react-three/drei";
 import "./styles.css"; // Import the styles for the crosshair
 import RaycasterComponent from "../components/RayCaster";
 import Crosshair from "../components/Crosshair";
-import { RoomContext } from "../../contexts/socketContext";
 import { useSelector } from "react-redux";
 
+const PlayerBox = ({ player, key }) => {
+  return (
+    <>
+      {!player.lives <= 0 && (
+        <>
+          <Box
+            key={key}
+            position={player.position}
+            userData={player}
+            args={[1, 1, 1]}
+          >
+            <meshStandardMaterial attach="material" color={player.color} />
+          </Box>
+        </>
+      )}
+    </>
+  );
+};
+
 const Scene = () => {
-
- 
-
-  const { playerData, setPlayerData } = useContext(RoomContext);
   const { camera } = useThree();
   const data = useSelector((state) => state.myPlayerData);
+  const playerData = useSelector((state) => state.otherPlayerData);
   const { position } = data;
-  useFrame(()=>{
-    camera.position.set(...position)
-  })
+
+  useFrame(() => {
+    camera.position.set(...position);
+  });
+
   return (
     <>
       <ambientLight intensity={2} />
       <pointLight position={[10, 10, 10]} />
-      {Object.keys(playerData).map((key, index) => {
+      {Object.keys(playerData).map((key) => {
         const player = playerData[key];
-        if (player.lives === 0) {
-          return (
-            <Box
-              key={index}
-              position={player.position}
-              userData={player}
-              args={[1, 1, 1]}
-            >
-              <meshStandardMaterial attach="material" color="white" />
-            </Box>
-          );
-        } else {
-          return (
-            <Box
-              key={index}
-              position={player.position}
-              userData={player}
-              args={[1, 1, 1]}
-            >
-              <meshStandardMaterial attach="material" color={player.color} />
-            </Box>
-          );
-        }
+        return <PlayerBox key={key} player={player} />;
       })}
       <Icosahedron
         userData={{ lives: 10 }}
@@ -59,12 +50,8 @@ const Scene = () => {
       >
         <meshStandardMaterial attach="material" color="orange" />
       </Icosahedron>
-      <RaycasterComponent
-        camera={camera}
-        playerData={playerData}
-        setPlayerData={setPlayerData}
-      />
-      <PointerLockControls position={position} camera={camera} />
+      <RaycasterComponent camera={camera} playerData={playerData} />
+      <PointerLockControls />
     </>
   );
 };
@@ -75,7 +62,6 @@ const MainCanvas = () => {
       <Canvas>
         <Scene />
       </Canvas>
-
       <Crosshair />
     </div>
   );

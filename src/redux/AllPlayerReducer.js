@@ -28,9 +28,10 @@ const OtherPlayerData = createSlice({
       };
     },
     reduceLife: (state, action) => {
-      console.log("REDUCE LIFE PAYLOAD",action.payload)
       const user = action.payload.user;
-      console.log("REDUCE LIFE", state[user]);
+      if (state[user].lives - action.payload.liveCount) {
+        console.log(`${user} Died`);
+      }
       return {
         ...state,
         [user]: {

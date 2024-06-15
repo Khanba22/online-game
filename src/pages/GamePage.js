@@ -15,9 +15,7 @@ const GamePage = () => {
   const { username } = data;
 
   const shotPlayer = ({ shooter, victim, livesTaken }) => {
-    console.log("SHot PLayer", username, shooter, victim, livesTaken);
     if (victim === username) {
-      console.log("You Were Shot");
       dispatch({
         type: `${reduceMyLife}`,
         payload: {
@@ -47,7 +45,6 @@ const GamePage = () => {
         bulletArr.length - liveCount
       }`
     );
-    console.log("USERNAME", username);
     dispatch({
       type: `${addEquipment}`,
       payload: {
