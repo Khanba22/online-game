@@ -108,7 +108,14 @@ const myPlayerData = createSlice({
         username: action.payload.username,
       };
     },
+    reduceMyLife: (state, action) => {
+      return {
+        ...state,
+        lives: state.lives - action.payload.liveCount,
+      };
+    },
   },
 });
-export const { setPlayer, useEquipment, addEquipment ,setName } = myPlayerData.actions;
+export const { setPlayer, useEquipment, addEquipment, setName , reduceMyLife } =
+  myPlayerData.actions;
 export default myPlayerData.reducer;

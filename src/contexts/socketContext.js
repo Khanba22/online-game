@@ -6,8 +6,8 @@ import { v4 as uuidv4 } from "uuid";
 import { peerReducer } from "./peerReducer";
 import { addPeerAction, removePeerAction } from "./peerActions";
 import { useDispatch, useSelector } from "react-redux";
-import { setPlayer } from "../redux/PlayerDataReducer";
-import { setOtherPlayer } from "../redux/AllPlayerReducer";
+import { reduceMyLife, setPlayer } from "../redux/PlayerDataReducer";
+import { reduceLife, setOtherPlayer } from "../redux/AllPlayerReducer";
 const WS = "http://localhost:8080";
 
 export const RoomContext = createContext(null);
@@ -39,11 +39,11 @@ export const RoomProvider = ({ children }) => {
     setRoomId(roomId);
     setPlayerData(memberNames);
     dispatch({
-      type:`${setOtherPlayer}`,
-      payload:{
+      type: `${setOtherPlayer}`,
+      payload: {
         data: memberNames,
-      }
-    })
+      },
+    });
     dispatch({
       type: `${setPlayer}`,
       payload: {
@@ -52,11 +52,12 @@ export const RoomProvider = ({ children }) => {
     });
   };
 
-
   const startGame = ({ roomId }) => {
     setRoomId(roomId);
     navigate(`/game/${roomId}`);
   };
+
+
 
   useEffect(() => {
     const meId = uuidv4();

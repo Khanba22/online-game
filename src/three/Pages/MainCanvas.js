@@ -1,13 +1,27 @@
 import React, { useContext } from "react";
-import { Canvas } from "@react-three/fiber";
-import { PointerLockControls, Box, Icosahedron } from "@react-three/drei";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import {
+  PointerLockControls,
+  Box,
+  Icosahedron,
+} from "@react-three/drei";
 import "./styles.css"; // Import the styles for the crosshair
 import RaycasterComponent from "../components/RayCaster";
 import Crosshair from "../components/Crosshair";
 import { RoomContext } from "../../contexts/socketContext";
+import { useSelector } from "react-redux";
 
 const Scene = () => {
+
+ 
+
   const { playerData, setPlayerData } = useContext(RoomContext);
+  const { camera } = useThree();
+  const data = useSelector((state) => state.myPlayerData);
+  const { position } = data;
+  useFrame(()=>{
+    camera.position.set(...position)
+  })
   return (
     <>
       <ambientLight intensity={2} />
@@ -46,10 +60,11 @@ const Scene = () => {
         <meshStandardMaterial attach="material" color="orange" />
       </Icosahedron>
       <RaycasterComponent
+        camera={camera}
         playerData={playerData}
         setPlayerData={setPlayerData}
       />
-      <PointerLockControls />
+      <PointerLockControls position={position} camera={camera} />
     </>
   );
 };

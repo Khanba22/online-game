@@ -37,13 +37,14 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
     try {
       const room = roomName[roomId];
       const damage = room[shooter].hasDoubleDamage ? 2 : 1;
+      var livesTaken = 0;
       if (!room[victim].hasShield) {
         room[victim].lives -= damage;
+        livesTaken = damage;
       }
-      console.log("Shooter");
-      console.log(room[shooter]);
-      console.log("Victim");
-      console.log(room[victim]);
+      socket
+        .to(roomId)
+        .emit("player-shot", { shooter, victim, livesTaken: livesTaken });
     } catch (error) {
       console.log(error);
     }

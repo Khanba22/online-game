@@ -4,7 +4,8 @@ import { RoomContext } from "../contexts/socketContext";
 import MainCanvas from "../three/Pages/MainCanvas";
 import EquipmentBar from "../three/UIComponents/EquipmentBar";
 import { useDispatch, useSelector } from "react-redux";
-import { addEquipment } from "../redux/PlayerDataReducer";
+import { addEquipment, reduceMyLife } from "../redux/PlayerDataReducer";
+import { reduceLife } from "../redux/AllPlayerReducer";
 
 const GamePage = () => {
   // const { id } = useParams();
@@ -12,6 +13,26 @@ const GamePage = () => {
   const dispatch = useDispatch();
   const data = useSelector((state) => state.myPlayerData);
   const { username } = data;
+
+  const shotPlayer = ({ shooter, victim, livesTaken }) => {
+    console.log("SHot PLayer", username, shooter, victim, livesTaken);
+    if (victim === username) {
+      console.log("You Were Shot");
+      dispatch({
+        type: `${reduceMyLife}`,
+        payload: {
+          liveCount: livesTaken,
+        },
+      });
+    }
+    dispatch({
+      type: `${reduceLife}`,
+      payload: {
+        user: victim,
+        liveCount: livesTaken,
+      },
+    });
+  };
   const roundStart = ({ bulletArr, equipments }) => {
     var liveCount = 0;
     bulletArr.forEach((bullet) => {
@@ -36,12 +57,14 @@ const GamePage = () => {
   };
 
   useEffect(() => {
+    ws.on("player-shot", shotPlayer);
     ws.on("round-started", roundStart);
 
     return () => {
       ws.off("round-started", roundStart);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+      ws.off("player-shot", shotPlayer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const startNextRound = () => {

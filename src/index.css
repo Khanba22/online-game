@@ -9,6 +9,14 @@
 }
 
 
+.equipmentButton{
+  
+}
+
+.equipmentButton:disabled{
+  background-color: gray;
+}
+
 :root {
   --bgPrimary: #282c34
 }

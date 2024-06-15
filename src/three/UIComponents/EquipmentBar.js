@@ -15,36 +15,35 @@ const EquipmentBar = () => {
       {equipment &&
         Object.keys(equipment).map((eq) => {
           return (
-            <>
-              <div className="z-40">
-                <button
-                  className="z-40 cursor-pointer"
-                  onClick={() => {
-                    ws.emit("use-equipment", {
-                      roomId,
+            <div key={eq} className="z-40">
+              <button
+                className="z-40 cursor-pointer equipmentButton"
+                disabled={equipment[eq] === 0}
+                onClick={() => {
+                  ws.emit("use-equipment", {
+                    roomId,
+                    equipmentType: eq,
+                    player: username,
+                  });
+                  dispatch({
+                    type: `${useEquipment}`,
+                    payload: {
                       equipmentType: eq,
-                      player: username,
-                    });
-                    dispatch({
-                      type: `${useEquipment}`,
-                      payload: {
-                        equipmentType: eq,
-                      },
-                    });
-                    dispatch({
-                      type: `${usePlayerEquipment}`,
-                      payload: {
-                        user: username,
-                        equipmentType: eq,
-                      },
-                    });
-                  }}
-                >
-                  {eq}
-                </button>
-                {equipment[eq]}
-              </div>
-            </>
+                    },
+                  });
+                  dispatch({
+                    type: `${usePlayerEquipment}`,
+                    payload: {
+                      user: username,
+                      equipmentType: eq,
+                    },
+                  });
+                }}
+              >
+                {eq}
+              </button>
+              {equipment[eq]}
+            </div>
           );
         })}
     </div>

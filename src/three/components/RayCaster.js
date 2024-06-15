@@ -4,23 +4,20 @@ import { useSelector } from "react-redux";
 import { Raycaster, Vector3 } from "three";
 import { RoomContext } from "../../contexts/socketContext";
 
-const RaycasterComponent = ({ playerData, setPlayerData }) => {
-  const { camera, scene } = useThree();
+const RaycasterComponent = ({ camera }) => {
+  const { scene } = useThree();
   const { ws, roomId } = useContext(RoomContext);
   const raycaster = useRef(new Raycaster());
   const direction = new Vector3();
   const [intersectedObject, setIntersectedObject] = useState(null);
   const data = useSelector((state) => state.myPlayerData);
   const handleClick = () => {
-    if (intersectedObject) {
+    if (intersectedObject && intersectedObject.userData && intersectedObject.userData.username) {
       ws.emit("shoot-player", {
         shooter: data.username,
         victim: intersectedObject.userData.username,
         roomId,
       });
-      console.log(
-        `${data.username} Shot ${intersectedObject.userData.username}`
-      );
     }
   };
 
