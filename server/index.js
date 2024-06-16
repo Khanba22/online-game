@@ -20,12 +20,10 @@ const io = new Server(server, {
 });
 
 io.on("connection", (socket) => {
-  console.log("User Connected");
 
   roomHandler(socket,rooms,roomName,roomConfig);
   gameHandler(socket,rooms,roomName,roomConfig);
   socket.on("disconnect", () => {
-    console.log("User Disconnected");
   });
 });
 

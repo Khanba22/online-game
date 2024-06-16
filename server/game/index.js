@@ -27,7 +27,6 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
         }
       }
     });
-    console.log(equipments);
     roomConfig[roomId].bulletArr = bulletArr;
     socket.emit("round-started", {
       bulletArr,
@@ -41,35 +40,57 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
     });
   };
 
+  const decideTurn = (roomId) => {
+    const gameDetails = roomConfig[roomId];
+    const players = Object.keys(roomName[roomId]);
+    var turn = (gameDetails.turn + 1) % gameDetails.memberNo;
+
+    var i = 100
+    while (i) {
+      if (roomName[roomId][players[turn]].lives === 0) {
+        turn = (turn + 1) % gameDetails.memberNo;
+      } else {
+        break;
+      }
+      i--;
+    }
+    gameDetails.turn = turn;
+  };
+
   const shootPlayer = ({ shooter, victim, roomId }) => {
     const gameDetails = roomConfig[roomId];
     try {
       const room = roomName[roomId];
       const damage = room[shooter].hasDoubleDamage ? 2 : 1;
       var livesTaken = 0;
+
       if (!shooter.hasDoubleTurn) {
-        gameDetails.turn = (gameDetails.turn + 1) % gameDetails.memberNo;
+        decideTurn(roomId);
       }
       if (!room[victim].hasShield) {
         room[victim].lives -= damage;
         livesTaken = damage;
       }
-      
-      socket
-        .to(roomId)
-        .emit("player-shot", {
-          shooter,
-          victim,
-          livesTaken: livesTaken,
-          turn: gameDetails.turn,
-        });
-        socket
-        .emit("player-shot", {
-          shooter,
-          victim,
-          livesTaken: livesTaken,
-          turn: gameDetails.turn,
-        });
+      room[shooter] = {
+        ...room[shooter],
+        hasDoubleDamage: false,
+        hasDoubleTurn: false,
+        canLookBullet: false,
+      };
+      room[victim] = { ...room[victim], hasShield: false };
+
+      socket.to(roomId).emit("player-shot", {
+        shooter,
+        victim,
+        livesTaken: livesTaken,
+        currentTurn: gameDetails.turn,
+      });
+      socket.emit("player-shot", {
+        shooter,
+        victim,
+        livesTaken: livesTaken,
+        currentTurn: gameDetails.turn,
+      });
     } catch (error) {
       console.log(error);
     }
@@ -102,7 +123,6 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
     } else {
       room[player][effect] = true;
     }
-    console.log(room[player]);
   };
 
   socket.on("start-round", startRound);

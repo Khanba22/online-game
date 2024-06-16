@@ -3,31 +3,32 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { Raycaster, Vector3 } from "three";
 import { RoomContext } from "../../contexts/socketContext";
+import { Bounce, toast } from "react-toastify";
 
-const RaycasterComponent = ({ camera }) => {
+const RaycasterComponent = ({ camera, turn }) => {
   const { scene } = useThree();
   const { ws, roomId } = useContext(RoomContext);
   const raycaster = useRef(new Raycaster());
   const direction = new Vector3();
   const [intersectedObject, setIntersectedObject] = useState(null);
   const data = useSelector((state) => state.myPlayerData);
+  const allPlayerData = useSelector((state) => state.otherPlayerData);
   const handleClick = () => {
-    if (intersectedObject && intersectedObject.userData && intersectedObject.userData.username) {
-      ws.emit("shoot-player", {
-        shooter: data.username,
-        victim: intersectedObject.userData.username,
-        roomId,
-      });
+    const intereSected = raycaster.current.intersectObjects(
+      scene.children,
+      true
+    )[0]?.object;
+    if (intereSected?.userData?.lives !== 0 && turn === data.index) {
+      console.log(intereSected);
     }
   };
-
   useEffect(() => {
     window.addEventListener("click", handleClick);
     return () => {
       window.removeEventListener("click", handleClick);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [intersectedObject]);
+  }, []);
 
   useFrame(() => {
     // Update the direction vector to the camera's current direction

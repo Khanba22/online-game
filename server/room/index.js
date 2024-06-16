@@ -1,11 +1,11 @@
 const { v4 } = require("uuid");
-const colorArr = ["red", "blue", "green", "yellow", "pink"];
+const colorArr = ["red", "blue", "green", "black", "purple"];
 const positions = [
-  [16,0,8],
-  [10.472,0,15.608],
-  [1.528,0,12.704],
-  [1.528,0,3.296],
-  [10.472,0,0.392],
+  [10,0,5],
+  [6.545,0,9.755],
+  [0.955,0,7.94],
+  [0.955,0,2.06],
+  [6.545,0,0.245],
 ];
 
 const roomHandler = (socket, rooms, roomName, roomConfig) => {
@@ -39,11 +39,11 @@ const roomHandler = (socket, rooms, roomName, roomConfig) => {
           isShielded: false,
           hasDoubleDamage: false,
           canLookBullet: false,
+          hasDoubleTurn:false,
           color: colorArr[roomConfig[roomId].memberNo],
           position: positions[roomConfig[roomId].memberNo],
         };
         roomName[roomId][username] = config;
-        console.log(roomName[roomId]);
         rooms[roomId].push(peerId);
         socket.to(roomId).emit("user-joined", { peerId });
         roomConfig[roomId].memberNo = roomConfig[roomId].memberNo + 1;

@@ -6,15 +6,26 @@ import EquipmentBar from "../three/UIComponents/EquipmentBar";
 import { useDispatch, useSelector } from "react-redux";
 import { addEquipment, reduceMyLife } from "../redux/PlayerDataReducer";
 import { reduceLife } from "../redux/AllPlayerReducer";
+import { updateGameTurn } from "../redux/GameConfig";
 
 const GamePage = () => {
   // const { id } = useParams();
   const { ws, roomId, isAdmin } = useContext(RoomContext);
   const dispatch = useDispatch();
+  const gameConfig = useSelector((state) => state.gameConfig);
+  const { turn } = gameConfig;
   const data = useSelector((state) => state.myPlayerData);
+  // const playerData = useSelector((state) => state.otherPlayerData);
   const { username } = data;
 
-  const shotPlayer = ({ shooter, victim, livesTaken }) => {
+  const shotPlayer = ({ shooter, victim, livesTaken, currentTurn }) => {
+
+    dispatch({
+      type: `${updateGameTurn}`,
+      payload: {
+        turn: currentTurn,
+      },
+    });
     if (victim === username) {
       dispatch({
         type: `${reduceMyLife}`,
@@ -75,17 +86,18 @@ const GamePage = () => {
         <EquipmentBar />
       </div>
       <div className="h-screen w-screen">
-        <MainCanvas />
+        <MainCanvas turn={turn} />
       </div>
       {isAdmin && <button onClick={startNextRound}>Start Next Round</button>}
       <button
         className="bg-teal-500 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition duration-300"
         onClick={() => {
-          console.log(data);
+          console.log({...data,...gameConfig});
         }}
       >
         Log My Data
       </button>
+      <h1>Current Turn {turn}</h1>
     </>
   );
 };
