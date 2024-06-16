@@ -42,16 +42,19 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
 
   const decideTurn = (roomId) => {
     const gameDetails = roomConfig[roomId];
-    const players = Object.keys(roomName);
+    const players = Object.keys(roomName[roomId]);
     var turn = (gameDetails.turn + 1) % gameDetails.memberNo;
-    while (true) {
-      if (roomName[players[turn]].lives === 0) {
+
+    var i = 100
+    while (i) {
+      if (roomName[roomId][players[turn]].lives === 0) {
         turn = (turn + 1) % gameDetails.memberNo;
       } else {
         break;
       }
+      i--;
     }
-    gameDetails.turn = (gameDetails.turn + 1) % gameDetails.memberNo;
+    gameDetails.turn = turn;
   };
 
   const shootPlayer = ({ shooter, victim, roomId }) => {
@@ -60,6 +63,7 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
       const room = roomName[roomId];
       const damage = room[shooter].hasDoubleDamage ? 2 : 1;
       var livesTaken = 0;
+
       if (!shooter.hasDoubleTurn) {
         decideTurn(roomId);
       }
@@ -79,13 +83,13 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
         shooter,
         victim,
         livesTaken: livesTaken,
-        turn: gameDetails.turn,
+        currentTurn: gameDetails.turn,
       });
       socket.emit("player-shot", {
         shooter,
         victim,
         livesTaken: livesTaken,
-        turn: gameDetails.turn,
+        currentTurn: gameDetails.turn,
       });
     } catch (error) {
       console.log(error);
@@ -119,7 +123,6 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
     } else {
       room[player][effect] = true;
     }
-    console.log(room[player]);
   };
 
   socket.on("start-round", startRound);

@@ -7,9 +7,7 @@ import Crosshair from "../components/Crosshair";
 import { useSelector } from "react-redux";
 import PlayerComponent from "../components/PlayerComponent";
 
-
-
-const Scene = () => {
+const Scene = ({ turn }) => {
   const { camera } = useThree();
   const data = useSelector((state) => state.myPlayerData);
   const playerData = useSelector((state) => state.otherPlayerData);
@@ -34,17 +32,17 @@ const Scene = () => {
       >
         <meshStandardMaterial attach="material" color="orange" />
       </Icosahedron>
-      <RaycasterComponent camera={camera} playerData={playerData} />
+      <RaycasterComponent turn={turn} camera={camera} playerData={playerData} />
       <PointerLockControls />
     </>
   );
 };
 
-const MainCanvas = () => {
+const MainCanvas = ({ turn }) => {
   return (
     <div className="h-screen w-screen">
       <Canvas>
-        <Scene />
+        <Scene turn={turn} />
       </Canvas>
       <Crosshair />
     </div>

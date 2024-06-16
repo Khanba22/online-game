@@ -3,6 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 const myPlayerData = createSlice({
   name: "myPlayerData",
   initialState: {
+    index:0,
     username: "",
     lives: 5,
     equipment: {

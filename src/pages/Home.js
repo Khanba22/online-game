@@ -26,7 +26,7 @@ const Home = () => {
       <JoinButton />
       <button
         onClick={() => {
-          console.log("MyData", myPlayerData);
+
           dispatch({
             type: `${useEquipment}`,
             payload: {
