@@ -23,7 +23,6 @@ export const RoomProvider = ({ children }) => {
   const [roomId, setRoomId] = useState("");
   const [stream, setStream] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [turn,setTurn] = useState(0);
   const enterRoom = ({ roomId }) => {
     navigate(`/room/${roomId}`);
   };
@@ -44,7 +43,9 @@ export const RoomProvider = ({ children }) => {
     dispatch({
       type: `${setPlayer}`,
       payload: {
-        data: memberNames[username],
+        data: {
+          ...memberNames[username],
+        },
       },
     });
   };
@@ -113,8 +114,6 @@ export const RoomProvider = ({ children }) => {
         setJoined,
         isAdmin,
         setIsAdmin,
-        turn,
-        setTurn
       }}
     >
       {children}

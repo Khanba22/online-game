@@ -19,7 +19,6 @@ const Room = () => {
   useEffect(() => {
     if (joined && Object.keys(playerData).length > 0) {
       setIsAdmin(Object.keys(playerData)[0] === data.username);
-      console.log("UseEffecT ROOM", playerData[username], username);
       dispatch({
         type: `${setPlayer}`,
         payload: { data: playerData[username] },
