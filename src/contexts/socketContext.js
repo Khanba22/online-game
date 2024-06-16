@@ -8,6 +8,7 @@ import { addPeerAction, removePeerAction } from "./peerActions";
 import { useDispatch, useSelector } from "react-redux";
 import { setPlayer } from "../redux/PlayerDataReducer";
 import { setOtherPlayer } from "../redux/AllPlayerReducer";
+import { setPlayerArray } from "../redux/GameConfig";
 const WS = "http://localhost:8080";
 
 export const RoomContext = createContext(null);
@@ -38,6 +39,15 @@ export const RoomProvider = ({ children }) => {
       type: `${setOtherPlayer}`,
       payload: {
         data: memberNames,
+      },
+    });
+    const playerArr = Object.keys(memberNames).map((memberName) =>
+      memberName.toString()
+    );
+    dispatch({
+      type: `${setPlayerArray}`,
+      payload: {
+        players: playerArr,
       },
     });
     dispatch({

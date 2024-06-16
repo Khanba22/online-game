@@ -5,52 +5,65 @@ import { Raycaster, Vector3 } from "three";
 import { RoomContext } from "../../contexts/socketContext";
 import { Bounce, toast } from "react-toastify";
 
-const RaycasterComponent = ({ camera, turn }) => {
+const RaycasterComponent = ({ camera }) => {
   const { scene } = useThree();
   const { ws, roomId } = useContext(RoomContext);
   const raycaster = useRef(new Raycaster());
   const direction = new Vector3();
-  const [intersectedObject, setIntersectedObject] = useState(null);
-  const data = useSelector((state) => state.myPlayerData);
-  const allPlayerData = useSelector((state) => state.otherPlayerData);
+  const config = useSelector((state) => state.gameConfig);
+  const myData = useSelector((state) => state.myPlayerData);
+  const { turn, players } = config;
+  const turnRef = useRef(turn);
+  const intersectedObjectRef = useRef(null);
+
   const handleClick = () => {
-    
+    const currentIntersectedObject = intersectedObjectRef.current;
+    console.log(currentIntersectedObject);
+    if (currentIntersectedObject && currentIntersectedObject.userData && turnRef.current) {
+      console.log(currentIntersectedObject.userData);
+      ws.emit("shoot-player", {
+        shooter: myData.username,
+        victim: currentIntersectedObject.userData.username,
+        roomId,
+      });
+    }
+    if (!turnRef.current) {
+      toast.warn("Not Your Turn Now")
+    }
   };
+
   useEffect(() => {
     window.addEventListener("click", handleClick);
     return () => {
       window.removeEventListener("click", handleClick);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useFrame(() => {
-    // Update the direction vector to the camera's current direction
     camera.getWorldDirection(direction);
-
-    // Set the raycaster from the camera position in the direction it is looking
+    turnRef.current = players.indexOf(myData.username) === turn;
     raycaster.current.set(camera.position, direction);
-
-    // Find intersected objects
     const intersects = raycaster.current.intersectObjects(scene.children, true);
 
     if (intersects.length > 0) {
       const intersected = intersects[0].object;
-
-      // Change the color of the intersected object to yellow
-      if (intersected !== intersectedObject) {
-        if (intersectedObject) {
-          intersectedObject.material.color.set(intersectedObject.originalColor);
+      if (intersected !== intersectedObjectRef.current) {
+        if (intersectedObjectRef.current) {
+          intersectedObjectRef.current.material.color.set(
+            intersectedObjectRef.current.originalColor
+          );
         }
         intersected.originalColor = intersected.material.color.getHex();
         intersected.material.color.set(0xffff00);
-        setIntersectedObject(intersected);
+        intersectedObjectRef.current = intersected;
       }
     } else {
       // Reset the color of the previously intersected object
-      if (intersectedObject) {
-        intersectedObject.material.color.set(intersectedObject.originalColor);
-        setIntersectedObject(null);
+      if (intersectedObjectRef.current) {
+        intersectedObjectRef.current.material.color.set(
+          intersectedObjectRef.current.originalColor
+        );
+        intersectedObjectRef.current = null;
       }
     }
   });

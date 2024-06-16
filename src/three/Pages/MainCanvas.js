@@ -14,7 +14,7 @@ const Scene = ({ turn }) => {
   const { position } = data;
 
   useFrame(() => {
-    camera.position.set(...position);
+    // camera.position.set(...position);
   });
 
   return (
