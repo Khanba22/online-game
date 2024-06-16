@@ -14,13 +14,7 @@ const RaycasterComponent = ({ camera, turn }) => {
   const data = useSelector((state) => state.myPlayerData);
   const allPlayerData = useSelector((state) => state.otherPlayerData);
   const handleClick = () => {
-    const intereSected = raycaster.current.intersectObjects(
-      scene.children,
-      true
-    )[0]?.object;
-    if (intereSected?.userData?.lives !== 0 && turn === data.index) {
-      console.log(intereSected);
-    }
+    
   };
   useEffect(() => {
     window.addEventListener("click", handleClick);
