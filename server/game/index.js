@@ -45,7 +45,7 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
     const players = Object.keys(roomName[roomId]);
     var turn = (gameDetails.turn + 1) % gameDetails.memberNo;
 
-    var i = 100
+    var i = 100;
     while (i) {
       if (roomName[roomId][players[turn]].lives === 0) {
         turn = (turn + 1) % gameDetails.memberNo;
@@ -55,6 +55,7 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
       i--;
     }
     gameDetails.turn = turn;
+    console.log("", gameDetails.turn);
   };
 
   const shootPlayer = ({ shooter, victim, roomId }) => {
@@ -63,11 +64,15 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
       const room = roomName[roomId];
       const damage = room[shooter].hasDoubleDamage ? 2 : 1;
       var livesTaken = 0;
-
-      if (!shooter.hasDoubleTurn) {
+      const shooterDetails = room[shooter];
+      const victimDetails = room[victim];
+      if (!shooterDetails.hasDoubleTurn) {
         decideTurn(roomId);
       }
-      if (!room[victim].hasShield) {
+
+      const isBulletLive = gameDetails.bulletArr.pop()
+      console.log(isBulletLive , gameDetails.bulletArr)
+      if (!room[victim].hasShield || isBulletLive) {
         room[victim].lives -= damage;
         livesTaken = damage;
       }
@@ -91,6 +96,9 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
         livesTaken: livesTaken,
         currentTurn: gameDetails.turn,
       });
+      if (gameDetails.bulletArr.length === 0) {
+        startRound({roomId})
+      }
     } catch (error) {
       console.log(error);
     }

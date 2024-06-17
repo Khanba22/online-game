@@ -18,7 +18,12 @@ const RaycasterComponent = ({ camera }) => {
 
   const handleClick = () => {
     const currentIntersectedObject = intersectedObjectRef.current;
-    console.log(currentIntersectedObject);
+    try{
+      console.log(currentIntersectedObject.userData);
+
+    }catch(err){
+
+    }
     if (currentIntersectedObject && currentIntersectedObject.userData && turnRef.current) {
       console.log(currentIntersectedObject.userData);
       ws.emit("shoot-player", {

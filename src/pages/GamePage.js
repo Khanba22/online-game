@@ -6,7 +6,12 @@ import EquipmentBar from "../three/UIComponents/EquipmentBar";
 import { useDispatch, useSelector } from "react-redux";
 import { addEquipment, reduceMyLife } from "../redux/PlayerDataReducer";
 import { reduceLife } from "../redux/AllPlayerReducer";
-import { updateGameTurn } from "../redux/GameConfig";
+import {
+  removeBullet,
+  setBulletArr,
+  updateGameTurn,
+} from "../redux/GameConfig";
+import { toast } from "react-toastify";
 
 const GamePage = () => {
   // const { id } = useParams();
@@ -19,7 +24,9 @@ const GamePage = () => {
   const { username } = data;
 
   const shotPlayer = ({ shooter, victim, livesTaken, currentTurn }) => {
-
+    dispatch({
+      type: `${removeBullet}`,
+    });
     dispatch({
       type: `${updateGameTurn}`,
       payload: {
@@ -49,19 +56,23 @@ const GamePage = () => {
         liveCount += 1;
       }
     });
-    console.log(
-      `No Of Bullets : ${
-        bulletArr.length
-      }, Live Rounds : ${liveCount}, Fake Rounds : ${
-        bulletArr.length - liveCount
-      }`
-    );
+    dispatch({
+      type: `${setBulletArr}`,
+      payload: {
+        bulletArr: bulletArr,
+      },
+    });
     dispatch({
       type: `${addEquipment}`,
       payload: {
         equipment: equipments[username],
       },
     });
+    toast.info(
+      `Starting Next Round, Live Bullets : ${liveCount} , Fake Bullets : ${
+        bulletArr.length - liveCount
+      }`
+    );
   };
 
   useEffect(() => {
@@ -92,7 +103,7 @@ const GamePage = () => {
       <button
         className="bg-teal-500 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition duration-300"
         onClick={() => {
-          console.log({...data,...gameConfig});
+          console.log({ ...data, ...gameConfig });
         }}
       >
         Log My Data

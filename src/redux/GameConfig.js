@@ -5,14 +5,15 @@ const GameConfig = createSlice({
   initialState: {
     players: [],
     turn: 0,
+    bulletArr: [],
     deadUsers: 0,
   },
   reducers: {
     updateGameTurn: (state, action) => {
-      console.log(action.payload)
+      console.log(action.payload);
       return {
         ...state,
-        turn:action.payload.turn,
+        turn: action.payload.turn,
       };
     },
     setPlayerArray: (state, action) => {
@@ -21,8 +22,21 @@ const GameConfig = createSlice({
         players: action.payload.players,
       };
     },
+    setBulletArr: (state, action) => {
+      return {
+        ...state,
+        bulletArr: action.payload.bulletArr,
+      };
+    },
+    removeBulletArr: (state, action) => {
+      return {
+        ...state,
+        bulletArr: state.bulletArr.slice(0, -1),
+      };
+    },
   },
 });
 
-export const { updateGameTurn , setPlayerArray } = GameConfig.actions;
+export const { updateGameTurn, setPlayerArray, setBulletArr, removeBullet } =
+  GameConfig.actions;
 export default GameConfig.reducer;
