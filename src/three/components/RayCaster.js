@@ -24,16 +24,21 @@ const RaycasterComponent = ({ camera }) => {
     }catch(err){
 
     }
-    if (currentIntersectedObject && currentIntersectedObject.userData && turnRef.current) {
+    if (!turnRef.current) {
+      toast.warn("Not Your Turn Now")
+      return
+    }
+    if (currentIntersectedObject?.userData?.lives && currentIntersectedObject.userData.lives <= 0) {
+      toast.warn("Cant Shoot A Dead Person")
+      return;
+    }
+    if (currentIntersectedObject?.userData && currentIntersectedObject.userData && turnRef.current) {
       console.log(currentIntersectedObject.userData);
       ws.emit("shoot-player", {
         shooter: myData.username,
         victim: currentIntersectedObject.userData.username,
         roomId,
       });
-    }
-    if (!turnRef.current) {
-      toast.warn("Not Your Turn Now")
     }
   };
 

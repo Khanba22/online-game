@@ -1,11 +1,11 @@
 const { v4 } = require("uuid");
 const colorArr = ["red", "blue", "green", "black", "purple"];
 const positions = [
-  [10,0,5],
-  [6.545,0,9.755],
-  [0.955,0,7.94],
-  [0.955,0,2.06],
-  [6.545,0,0.245],
+  [-1.7, 1.5, 1.7],
+  [0.8, 1.5, 3.2],
+  [3.7, 1.5, 1],
+  [2.4, 1.5, -2.4],
+  [-1.4, 1.5, -2],
 ];
 
 const roomHandler = (socket, rooms, roomName, roomConfig) => {

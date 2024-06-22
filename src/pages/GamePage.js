@@ -50,12 +50,28 @@ const GamePage = () => {
     });
   };
   const roundStart = ({ bulletArr, equipments }) => {
+    var index = 3;
     var liveCount = 0;
     bulletArr.forEach((bullet) => {
       if (bullet) {
         liveCount += 1;
       }
     });
+    const interVal = setInterval(() => {
+      if (index !== 0) {
+        toast.info(`Round Starting In ${index}`);
+      }
+      if (index === 0) {
+        clearInterval(interVal);
+        toast.info(
+          `Starting Next Round, Live Bullets : ${liveCount} , Fake Bullets : ${
+            bulletArr.length - liveCount
+          }`
+        );
+      }
+      index--;
+    }, 1000);
+
     dispatch({
       type: `${setBulletArr}`,
       payload: {
@@ -68,11 +84,6 @@ const GamePage = () => {
         equipment: equipments[username],
       },
     });
-    toast.info(
-      `Starting Next Round, Live Bullets : ${liveCount} , Fake Bullets : ${
-        bulletArr.length - liveCount
-      }`
-    );
   };
 
   useEffect(() => {
