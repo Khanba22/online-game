@@ -1,12 +1,12 @@
-import React from 'react'
-import EquipmentBar from '../UIComponents/EquipmentBar'
+import React from "react";
+import EquipmentBar from "../UIComponents/EquipmentBar";
 
 const GameUI = () => {
   return (
-    <div className='h-screen w-screen absolute'>
-      <EquipmentBar/>
-    </div>
-  )
-}
+    <>
+      <EquipmentBar />
+    </>
+  );
+};
 
-export default GameUI
+export default GameUI;

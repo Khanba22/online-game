@@ -54,7 +54,9 @@ const RaycasterComponent = ({ camera }) => {
     turnRef.current = players.indexOf(myData.username) === turn;
     raycaster.current.set(camera.position, direction);
     const intersects = raycaster.current.intersectObjects(scene.children, true);
-
+    if (!intersects.userData) {
+      return
+    }
     if (intersects.length > 0) {
       const intersected = intersects[0].object;
       if (intersected !== intersectedObjectRef.current) {

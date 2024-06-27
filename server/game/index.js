@@ -6,6 +6,7 @@ const equipmentList = [
   "doubleTurn",
 ];
 
+
 const gameHandler = (socket, rooms, roomName, roomConfig) => {
   const startRound = ({ roomId }) => {
     const bulletCount = Math.floor(Math.random() * 6) + 4;

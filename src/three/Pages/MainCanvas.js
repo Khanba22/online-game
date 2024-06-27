@@ -13,6 +13,7 @@ import Crosshair from "../components/Crosshair";
 import { useSelector } from "react-redux";
 import PlayerComponent from "../components/PlayerComponent";
 import { Map } from "../components/Map";
+import { Chair } from "../components/Chair";
 
 const Scene = ({ turn }) => {
   const { camera, scene } = useThree();
@@ -23,42 +24,60 @@ const Scene = ({ turn }) => {
 
   useFrame(() => {
     if (position) {
+      // Adjust the camera position based on player data
       // camera.position.set(position[0], position[1] + 1.5, position[2]);
     } else {
+      // Default camera position
       // camera.position.set(-1.4, 3, -2);
     }
-    // camera.position.set(...position);
-    // console.log(myRef.current.position0)
   });
 
   return (
     <>
-      <ambientLight intensity={2} />
-      <pointLight position={[10, 10, 10]} />
+      <ambientLight intensity={3} color={"#404040"} />
+      <pointLight
+        position={[0.76, 4, 0.1]}
+        intensity={1}
+        power={100}
+        decay={1}
+        castShadow
+        color={"#FFDD99"}
+      />
+      <pointLight position={[0, 3.5, 0]} intensity={0.9} color={"#FFEECC"} />
+      <pointLight position={[5.5, 3, 6.5]} intensity={0.4} color={"#505050"} />
+      <pointLight position={[-5.5, 3, 6.5]} intensity={0.4} color={"#505050"} />
+      <pointLight position={[5.5, 3, -6.5]} intensity={0.4} color={"#505050"} />
+      <pointLight
+        position={[-5.5, 3, -6.5]}
+        intensity={0.4}
+        color={"#505050"}
+      />
       {Object.keys(playerData).map((key) => {
         const player = playerData[key];
-        return <PlayerComponent key={key} player={player} />;
+        return (
+          <>
+            <PlayerComponent key={key} player={player} />
+            <Chair
+              position={player.position}
+              rotation={player.angle}
+              userData={player}
+              args={[1, 1, 1]}
+            >
+              <meshStandardMaterial attach="material" color={player.color} />
+            </Chair>
+          </>
+        );
       })}
-      <Map />
-      <Icosahedron
-        userData={{ lives: 10 }}
-        position={[-1.4, 1.5, -2]}
-        args={[1, 1, 1]}
-        scale={0.6}
-      >
-        <meshStandardMaterial attach="material" color="orange" />
-      </Icosahedron>
-
+      <Map myRef={myRef} />
       <RaycasterComponent turn={turn} camera={camera} playerData={playerData} />
-      {/* <PointerLockControls /> */}
-      <OrbitControls zoom0={0} position0={[10,10,10]} ref={myRef}/>
+      <OrbitControls zoom0={0} position0={[10, 10, 10]} ref={myRef} />
     </>
   );
 };
 
 const MainCanvas = ({ turn }) => {
   return (
-    <div className="h-screen w-screen">
+    <div className="h-screen w-full">
       <Canvas>
         <Scene turn={turn} />
       </Canvas>

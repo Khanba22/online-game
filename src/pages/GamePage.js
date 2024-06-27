@@ -104,12 +104,8 @@ const GamePage = () => {
   return (
     <>
       {/* <SettingsTab show={show} handleShow={handleShow} /> */}
-      <div className="h-screen w-screen absolute">
-        <EquipmentBar />
-      </div>
-      <div className="h-screen w-screen">
-        <MainCanvas turn={turn} />
-      </div>
+      <EquipmentBar />
+      <MainCanvas turn={turn} />
       {isAdmin && <button onClick={startNextRound}>Start Next Round</button>}
       <button
         className="bg-teal-500 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition duration-300"

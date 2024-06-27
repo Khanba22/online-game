@@ -19,6 +19,7 @@ const myPlayerData = createSlice({
     hasDoubleTurn: false,
     color: "",
     position: "",
+    angle:[]
   },
   reducers: {
     setPlayer: (state, action) => {

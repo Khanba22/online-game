@@ -19,6 +19,7 @@ const OtherPlayerData = createSlice({
       hasDoubleTurn: false,
       color: "",
       position: "",
+      angle:[]
     },
   },
   reducers: {
