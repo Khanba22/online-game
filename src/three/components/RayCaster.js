@@ -4,8 +4,7 @@ import { useSelector } from "react-redux";
 import { Raycaster, Vector3 } from "three";
 import { RoomContext } from "../../contexts/socketContext";
 import { Bounce, toast } from "react-toastify";
-
-const RaycasterComponent = ({ camera }) => {
+const RaycasterComponent = ({ camera, sound, audioLoader }) => {
   const { scene } = useThree();
   const { ws, roomId } = useContext(RoomContext);
   const raycaster = useRef(new Raycaster());
@@ -15,25 +14,41 @@ const RaycasterComponent = ({ camera }) => {
   const { turn, players } = config;
   const turnRef = useRef(turn);
   const intersectedObjectRef = useRef(null);
+  const temp = useRef(false);
 
   const handleClick = () => {
     const currentIntersectedObject = intersectedObjectRef.current;
-    try{
+    const soundUrl = temp.current ? "sounds/gun_audio.mp3" : "sounds/player_death.mp3";
+    console.log(soundUrl);
+    audioLoader.load(soundUrl, function (buffer) {
+      sound.setBuffer(buffer);
+      sound.setVolume(1);
+      sound.stop();
+      sound.play();
+    });
+
+    temp.current = !temp.current;
+    try {
       console.log(currentIntersectedObject.userData);
-
-    }catch(err){
-
-    }
+    } catch (err) {}
     if (!turnRef.current) {
-      toast.warn("Not Your Turn Now")
-      return
-    }
-    if (currentIntersectedObject?.userData?.lives && currentIntersectedObject.userData.lives <= 0) {
-      toast.warn("Cant Shoot A Dead Person")
+      toast.warn("Not Your Turn Now");
       return;
     }
-    if (currentIntersectedObject?.userData && currentIntersectedObject.userData && turnRef.current) {
+    if (
+      currentIntersectedObject?.userData?.lives &&
+      currentIntersectedObject.userData.lives <= 0
+    ) {
+      toast.warn("Cant Shoot A Dead Person");
+      return;
+    }
+    if (
+      currentIntersectedObject?.userData &&
+      currentIntersectedObject.userData &&
+      turnRef.current
+    ) {
       console.log(currentIntersectedObject.userData);
+
       ws.emit("shoot-player", {
         shooter: myData.username,
         victim: currentIntersectedObject.userData.username,
@@ -55,7 +70,7 @@ const RaycasterComponent = ({ camera }) => {
     raycaster.current.set(camera.position, direction);
     const intersects = raycaster.current.intersectObjects(scene.children, true);
     if (!intersects.userData) {
-      return
+      return;
     }
     if (intersects.length > 0) {
       const intersected = intersects[0].object;

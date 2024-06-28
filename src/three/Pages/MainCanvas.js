@@ -2,9 +2,7 @@ import React, { useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   PointerLockControls,
-  Box,
   Icosahedron,
-  useGLTF,
   OrbitControls,
 } from "@react-three/drei";
 import "./styles.css"; // Import the styles for the crosshair
@@ -14,13 +12,24 @@ import { useSelector } from "react-redux";
 import PlayerComponent from "../components/PlayerComponent";
 import { Map } from "../components/Map";
 import { Chair } from "../components/Chair";
+import * as THREE from "three";
 
 const Scene = ({ turn }) => {
   const { camera, scene } = useThree();
+  const listener = new THREE.AudioListener();
+  camera.add(listener);
+
+  // create a global audio source
+  const sound = new THREE.Audio(listener);
+
+  // load a sound and set it as the Audio object's buffer
+  const audioLoader = new THREE.AudioLoader();
+
   const data = useSelector((state) => state.myPlayerData);
   const playerData = useSelector((state) => state.otherPlayerData);
-  const { position } = data;
   const myRef = useRef(null);
+
+  const { position } = data;
 
   useFrame(() => {
     if (position) {
@@ -34,14 +43,22 @@ const Scene = ({ turn }) => {
 
   return (
     <>
-      <ambientLight intensity={3} color={"#404040"} />
+      <ambientLight intensity={1} />
       <pointLight
-        position={[0.76, 4, 0.1]}
-        intensity={1}
-        power={100}
+        position={[1.76, 1, 0.1]}
+        intensity={1.6}
+        power={10}
         decay={1}
         castShadow
         color={"#FFDD99"}
+      />
+      <pointLight intensity={0.6} castShadow position={[4, 4.4, -2.4]} />
+      {/* <Icosahedron scale={0.1} position={[1, 4.5, 6.3]} /> */}
+      <pointLight
+        intensity={0.6}
+        castShadow
+        position={[1, 4.5, 6.3]}
+        color={"#FFEECC"}
       />
       <pointLight position={[0, 3.5, 0]} intensity={0.9} color={"#FFEECC"} />
       <pointLight position={[5.5, 3, 6.5]} intensity={0.4} color={"#505050"} />
@@ -69,8 +86,15 @@ const Scene = ({ turn }) => {
         );
       })}
       <Map myRef={myRef} />
-      <RaycasterComponent turn={turn} camera={camera} playerData={playerData} />
-      <OrbitControls zoom0={0} position0={[10, 10, 10]} ref={myRef} />
+      <RaycasterComponent
+      audioLoader={audioLoader}
+        sound={sound}
+        turn={turn}
+        camera={camera}
+        playerData={playerData}
+      />
+      {/* <OrbitControls zoom0={0} position0={[10, 10, 10]} ref={myRef} /> */}
+      <PointerLockControls />
     </>
   );
 };
@@ -79,6 +103,7 @@ const MainCanvas = ({ turn }) => {
   return (
     <div className="h-screen w-full">
       <Canvas>
+        <color attach={"background"} args={["black"]} />
         <Scene turn={turn} />
       </Canvas>
       <Crosshair />
