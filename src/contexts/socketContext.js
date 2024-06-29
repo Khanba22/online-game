@@ -24,6 +24,7 @@ export const RoomProvider = ({ children }) => {
   const [roomId, setRoomId] = useState("");
   const [stream, setStream] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [myPeerId, setMyPeerId] = useState("");
   const enterRoom = ({ roomId }) => {
     navigate(`/room/${roomId}`);
   };
@@ -67,7 +68,9 @@ export const RoomProvider = ({ children }) => {
 
   useEffect(() => {
     const meId = uuidv4();
+    setMyPeerId(meId);
     const peer = new Peer(meId);
+    console.log(meId, "Single UseEffect");
     setMe(peer);
     if (!peer) {
       alert("Peer Connection Failed");
@@ -75,9 +78,10 @@ export const RoomProvider = ({ children }) => {
     }
     try {
       navigator.mediaDevices
-        .getUserMedia({ audio: true, video: false })
+        .getUserMedia({ audio: true, video: true })
         .then((stream) => {
           setStream(stream);
+          dispatched(addPeerAction(myPeerId, stream));
         });
     } catch (error) {
       console.error(error);
@@ -99,13 +103,16 @@ export const RoomProvider = ({ children }) => {
     ws.on("user-joined", ({ peerId }) => {
       const call = me.call(peerId, stream);
       call.on("stream", (peerStream) => {
+        console.log(call, "WS Stream");
         dispatched(addPeerAction(peerId, peerStream));
       });
     });
 
     me.on("call", (call) => {
+      console.log(call, "me Call");
       call.answer(stream);
       call.on("stream", (peerStream) => {
+        console.log(peerStream, "me STREAM");
         dispatched(addPeerAction(call.peer, peerStream));
       });
     });

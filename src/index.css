@@ -8,10 +8,6 @@
   box-sizing: border-box;
 }
 
-*{
-  cursor: no-drop;
-}
-
 
 .equipmentButton:disabled {
   background-color: gray;

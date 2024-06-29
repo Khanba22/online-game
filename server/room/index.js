@@ -1,17 +1,10 @@
 const { v4 } = require("uuid");
 const colorArr = ["red", "blue", "green", "black", "purple"];
-const positions = [
-  [-1.7, 1.5, 1.7],
-  [0.8, 1.5, 3.2],
-  [3.7, 1.5, 1],
-  [2.4, 1.5, -2.4],
-  [-1.4, 1.5, -2],
-];
 
 const playerPositionArr = {
-  1:{
-    position:[[2.5, 0.19, 2.5]],
-    angle:[[0, 0.7, 0]]
+  1: {
+    position: [[2.5, 0.19, 2.5]],
+    angle: [[0, 0.7, 0]],
   },
   2: {
     position: [
@@ -81,7 +74,7 @@ const roomHandler = (socket, rooms, roomName, roomConfig) => {
     socket.join(roomId);
     socket.emit("room-created", { roomId });
   };
-  const joinRoom = ({ roomId, peerId, username }) => {
+  const joinRoom = async ({ roomId, peerId, username }) => {
     if (rooms[roomId] && !roomConfig[roomId].hasStarted) {
       socket.join(roomId);
       if (!rooms[roomId].includes(peerId)) {
@@ -103,15 +96,15 @@ const roomHandler = (socket, rooms, roomName, roomConfig) => {
         };
         roomName[roomId][username] = config;
         rooms[roomId].push(peerId);
-        socket.to(roomId).emit("user-joined", { peerId });
         roomConfig[roomId].memberNo = roomConfig[roomId].memberNo + 1;
-        socket.emit("user-joined", { peerId });
-        socket.to(roomId).emit("get-users", {
+        // socket.emit("user-joined", { peerId });
+        socket.to(roomId).emit("user-joined", { peerId });
+        socket.emit("get-users", {
           roomId,
           participants: rooms[roomId],
           memberNames: roomName[roomId],
         });
-        socket.emit("get-users", {
+        socket.to(roomId).emit("get-users", {
           roomId,
           participants: rooms[roomId],
           memberNames: roomName[roomId],
@@ -148,7 +141,7 @@ const roomHandler = (socket, rooms, roomName, roomConfig) => {
       try {
         rooms[roomId] = rooms[roomId].filter((id) => id !== peerId);
         delete roomName[roomId][username];
-        console.log(roomName[roomId]);
+        console.log("USer Diusconnected",roomName[roomId]);
         socket
           .to(roomId)
           .emit("user-disconnected", { peerId, members: roomName[roomId] });

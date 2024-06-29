@@ -5,9 +5,9 @@ import { useSelector } from "react-redux";
 
 const AudioControls = () => {
   const { roomId, stream, peers } = useContext(RoomContext);
-  const data = useSelector(state => state.myPlayerData);
+  const data = useSelector((state) => state.myPlayerData);
   const { username } = data;
-  const playerData = useSelector(state => state.otherPlayerData)
+  const playerData = useSelector((state) => state.otherPlayerData);
   return (
     <div className="h-full flex justify-center w-screen mx-auto p-10">
       <div className="bg-teal-300 p-6 w-full h-4/5 mt-20 rounded-lg shadow-lg">
@@ -22,7 +22,7 @@ const AudioControls = () => {
                 you={isYou}
                 key={i}
                 isAdmin={i === 0}
-                stream={isYou ? stream : peer.stream}
+                stream={ peer.stream}
                 username={Object.keys(playerData)[i]}
               />
             );
