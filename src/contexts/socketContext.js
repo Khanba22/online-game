@@ -1,5 +1,5 @@
 import Peer from "peerjs";
-import { createContext, useEffect, useReducer, useState } from "react";
+import { createContext, useEffect, useReducer, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import socketIoClient from "socket.io-client";
 import { v4 as uuidv4 } from "uuid";
@@ -23,14 +23,20 @@ export const RoomProvider = ({ children }) => {
   const [peers, dispatched] = useReducer(peerReducer, {});
   const [roomId, setRoomId] = useState("");
   const [stream, setStream] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const adminRef = useRef(false)
+  const [isAdmin,setIsAdmin] = useState(false);
   const [myPeerId, setMyPeerId] = useState("");
+  const usernameRef = useRef(null);
+  useEffect(() => {
+    if (username) {
+      usernameRef.current = username;
+    }
+  });
   const enterRoom = ({ roomId }) => {
     navigate(`/room/${roomId}`);
   };
 
   const removePeer = ({ peerId }) => {
-    setRoomId(roomId);
     dispatched(removePeerAction(peerId));
   };
 
@@ -70,7 +76,6 @@ export const RoomProvider = ({ children }) => {
     const meId = uuidv4();
     setMyPeerId(meId);
     const peer = new Peer(meId);
-    console.log(meId, "Single UseEffect");
     setMe(peer);
     if (!peer) {
       alert("Peer Connection Failed");
@@ -81,7 +86,7 @@ export const RoomProvider = ({ children }) => {
         .getUserMedia({ audio: true, video: true })
         .then((stream) => {
           setStream(stream);
-          dispatched(addPeerAction(myPeerId, stream));
+          dispatched(addPeerAction(meId, stream));
         });
     } catch (error) {
       console.error(error);
@@ -100,30 +105,36 @@ export const RoomProvider = ({ children }) => {
     if (!me) return;
     if (!stream) return;
 
-    ws.on("user-joined", ({ peerId }) => {
-      const call = me.call(peerId, stream);
+    ws.on("user-joined", ({ peerId, username }) => {
+      const call = me.call(peerId, stream, {
+        metadata: {
+          username: usernameRef.current,
+        },
+      });
       call.on("stream", (peerStream) => {
-        console.log(call, "WS Stream");
-        dispatched(addPeerAction(peerId, peerStream));
+        dispatched(addPeerAction(peerId, peerStream, username));
       });
     });
 
     me.on("call", (call) => {
-      console.log(call, "me Call");
-      call.answer(stream);
+      const caller = call.metadata.username;
+      call.answer(stream, { metadata: { username } });
       call.on("stream", (peerStream) => {
-        console.log(peerStream, "me STREAM");
-        dispatched(addPeerAction(call.peer, peerStream));
+        dispatched(addPeerAction(call.peer, peerStream, caller));
       });
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [me, stream]);
 
   return (
     <RoomContext.Provider
       value={{
+        adminRef,
+        usernameRef,
         ws,
         me,
         roomId,
+        myPeerId,
         setRoomId,
         stream,
         peers,

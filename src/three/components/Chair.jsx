@@ -7,10 +7,11 @@ import React, { useRef } from 'react'
 import { useGLTF } from '@react-three/drei'
 
 export function Chair(props) {
+  console.log(props.userData)
   const { nodes, materials } = useGLTF('/models/chair/chair.gltf')
   return (
     <group {...props} dispose={null}>
-      <mesh geometry={nodes.Cube026.geometry} material={materials.lambert2} position={[0, 1.4, 0]} />
+      <mesh userData={props.userData} geometry={nodes.Cube026.geometry} material={materials.lambert2} />
     </group>
   )
 }

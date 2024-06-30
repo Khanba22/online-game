@@ -2,8 +2,7 @@ import React, { useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   PointerLockControls,
-  Icosahedron,
-  OrbitControls,
+  // OrbitControls,
 } from "@react-three/drei";
 import "./styles.css"; // Import the styles for the crosshair
 import RaycasterComponent from "../components/RayCaster";
@@ -11,19 +10,15 @@ import Crosshair from "../components/Crosshair";
 import { useSelector } from "react-redux";
 import PlayerComponent from "../components/PlayerComponent";
 import { Map } from "../components/Map";
-import { Chair } from "../components/Chair";
 import * as THREE from "three";
 
 const Scene = ({ turn }) => {
-  const { camera, scene } = useThree();
+  const { camera } = useThree();
   const listener = new THREE.AudioListener();
   camera.add(listener);
 
-  // create a global audio source
   const sound = new THREE.Audio(listener);
-
-  // load a sound and set it as the Audio object's buffer
-  const audioLoader = new THREE.AudioLoader();
+  const audioLoader = new THREE.AudioLoader(sound);
 
   const data = useSelector((state) => state.myPlayerData);
   const playerData = useSelector((state) => state.otherPlayerData);
@@ -34,7 +29,7 @@ const Scene = ({ turn }) => {
   useFrame(() => {
     if (position) {
       // Adjust the camera position based on player data
-      // camera.position.set(position[0], position[1] + 1.5, position[2]);
+      camera.position.set(position[0], position[1] + 1.5, position[2]);
     } else {
       // Default camera position
       // camera.position.set(-1.4, 3, -2);
@@ -45,7 +40,7 @@ const Scene = ({ turn }) => {
     <>
       <ambientLight intensity={1} />
       <pointLight
-        position={[1.76, 1, 0.1]}
+        position={[2.76, 2, 0.1]}
         intensity={1.6}
         power={10}
         decay={1}
@@ -69,28 +64,20 @@ const Scene = ({ turn }) => {
         intensity={0.4}
         color={"#505050"}
       />
-      {Object.keys(playerData).map((key) => {
+      {Object.keys(playerData).map((key,id) => {
         const player = playerData[key];
         return (
           <>
-            <PlayerComponent key={key} player={player} />
-            <Chair
-              position={player.position}
-              rotation={player.angle}
-              userData={player}
-              args={[1, 1, 1]}
-            >
-              <meshStandardMaterial attach="material" color={player.color} />
-            </Chair>
+            <PlayerComponent id = {id} playerData={player} />
           </>
         );
       })}
-      <Map myRef={myRef} />
+      <Map position={[0, -1.4, 0]} myRef={myRef} />
       <RaycasterComponent
-      audioLoader={audioLoader}
         sound={sound}
         turn={turn}
         camera={camera}
+        audioLoader={audioLoader}
         playerData={playerData}
       />
       {/* <OrbitControls zoom0={0} position0={[10, 10, 10]} ref={myRef} /> */}

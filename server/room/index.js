@@ -97,8 +97,7 @@ const roomHandler = (socket, rooms, roomName, roomConfig) => {
         roomName[roomId][username] = config;
         rooms[roomId].push(peerId);
         roomConfig[roomId].memberNo = roomConfig[roomId].memberNo + 1;
-        // socket.emit("user-joined", { peerId });
-        socket.to(roomId).emit("user-joined", { peerId });
+        socket.to(roomId).emit("user-joined", { peerId , username });
         socket.emit("get-users", {
           roomId,
           participants: rooms[roomId],

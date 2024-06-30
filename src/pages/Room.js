@@ -80,6 +80,7 @@ const Room = () => {
           >
             Join Room
           </button>
+          <button onClick={()=>{console.log(data)}}>LOG MY DATA</button>
         </div>
       )}
     </>

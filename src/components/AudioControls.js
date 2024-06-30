@@ -4,9 +4,7 @@ import VideoPlayer from "../components/VideoPlayer";
 import { useSelector } from "react-redux";
 
 const AudioControls = () => {
-  const { roomId, stream, peers } = useContext(RoomContext);
-  const data = useSelector((state) => state.myPlayerData);
-  const { username } = data;
+  const { roomId, peers, myPeerId, usernameRef , adminRef } = useContext(RoomContext);
   const playerData = useSelector((state) => state.otherPlayerData);
   return (
     <div className="h-full flex justify-center w-screen mx-auto p-10">
@@ -15,15 +13,19 @@ const AudioControls = () => {
           Room Id {roomId}
         </h2>
         <div className="space-y-4 my-2">
-          {Object.values(peers).map((peer, i) => {
-            const isYou = Object.keys(playerData)[i] === username;
+          {Object.keys(peers).map((peerId, i) => {
+            const isYou = peerId === myPeerId;
+            const admin = Object.keys(playerData)[0];
+            const myName = peers[peerId].username === "You"?usernameRef.current:peers[peerId].username;
+            console.log(admin, myName, i);
+            adminRef.current = admin === myName
             return (
               <VideoPlayer
                 you={isYou}
                 key={i}
-                isAdmin={i === 0}
-                stream={ peer.stream}
-                username={Object.keys(playerData)[i]}
+                isAdmin={admin === myName}
+                stream={peers[peerId].stream}
+                username={peers[peerId].username}
               />
             );
           })}

@@ -12,7 +12,7 @@ const VideoPlayer = ({ stream, username, isAdmin, you }) => {
   };
 
   useEffect(() => {
-    console.log(stream)
+    console.log(username , stream)
     if (videoRef.current) {
       videoRef.current.srcObject = stream;
     }
@@ -34,7 +34,7 @@ const VideoPlayer = ({ stream, username, isAdmin, you }) => {
       ></video>
       <div className="flex items-center justify-between flex-1">
         <h2 className="text-xl font-semibold w-1/5">
-          {!you ? username : "You"} {isAdmin && "(Admin)"}
+          {username} {isAdmin && "(Admin)"}
         </h2>
         <input
           type="range"
@@ -48,8 +48,8 @@ const VideoPlayer = ({ stream, username, isAdmin, you }) => {
           className="p-2 text-sm text-white bg-blue-500 rounded hover:bg-blue-600"
           onClick={() => {
             const tracks = stream.getTracks()
-            tracks[0].enabled = !muted;
-            tracks[1].enabled = !muted;
+            tracks[0].enabled = muted;
+            tracks[1].enabled = muted;
             setMute(!muted);
           }}
         >

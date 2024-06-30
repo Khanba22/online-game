@@ -10,7 +10,7 @@ export function Map(props) {
   const { nodes, materials } = useGLTF('/models/map/map.gltf')
   return (
     <group {...props} dispose={null}>
-      <mesh geometry={nodes.Cube026.geometry} material={materials.lambert2} position={[-21.972, 1.951, -2.075]} />
+      <mesh geometry={nodes.Cube026.geometry} material={materials.lambert2}/>
       <mesh geometry={nodes.Cube666.geometry} material={materials.wall} />
       <mesh geometry={nodes.Cube666_1.geometry} material={materials.old_bulb_light_mat} />
       <mesh geometry={nodes.Cube666_2.geometry} material={materials.old_retro_light_mat} />

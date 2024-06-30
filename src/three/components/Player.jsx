@@ -5,16 +5,15 @@ Command: npx gltfjsx@6.2.16 player.gltf
 
 import React, { useRef } from 'react'
 import { useGLTF } from '@react-three/drei'
+import { useFrame } from 'react-three-fiber'
 
 export function Player(props) {
   const { nodes, materials } = useGLTF('/models/player/player.gltf')
   return (
-    <group {...props} dispose={null}>
-      <group scale={0.916}>
-        <primitive object={nodes.spine} />
-        <skinnedMesh geometry={nodes.Object_74.geometry} material={materials.Wolf3D_Avatar} skeleton={nodes.Object_74.skeleton} />
+      <group {...props} scale={0.916}>
+        <primitive {...props} object={nodes.spine} />
+        <skinnedMesh {...props} geometry={nodes.Object_74.geometry} material={materials.Wolf3D_Avatar} skeleton={nodes.Object_74.skeleton} />
       </group>
-    </group>
   )
 }
 

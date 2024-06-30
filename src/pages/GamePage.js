@@ -15,14 +15,12 @@ import { toast } from "react-toastify";
 
 const GamePage = () => {
   // const { id } = useParams();
-  const { ws, roomId, isAdmin } = useContext(RoomContext);
+  const { ws, roomId, isAdmin} = useContext(RoomContext);
   const dispatch = useDispatch();
   const gameConfig = useSelector((state) => state.gameConfig);
   const { turn } = gameConfig;
   const data = useSelector((state) => state.myPlayerData);
-  // const playerData = useSelector((state) => state.otherPlayerData);
   const { username } = data;
-
   const shotPlayer = ({ shooter, victim, livesTaken, currentTurn }) => {
     dispatch({
       type: `${removeBullet}`,

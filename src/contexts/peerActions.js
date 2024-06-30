@@ -4,9 +4,9 @@ export const ADD_MEMBER = "ADD_MEMBER";
 
 export const REMOVE_MEMBER = "REMOVE_MEMBER";
 
-export const addPeerAction = (peerId, stream) => ({
+export const addPeerAction = (peerId, stream , username) => ({
   type: ADD_PEER,
-  payload: { peerId, stream },
+  payload: { peerId, stream , username },
 });
 
 export const removePeerAction = (peerId) => ({

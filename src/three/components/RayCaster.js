@@ -1,10 +1,12 @@
 import { useFrame, useThree } from "@react-three/fiber";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { Raycaster, Vector3 } from "three";
 import { RoomContext } from "../../contexts/socketContext";
-import { Bounce, toast } from "react-toastify";
-const RaycasterComponent = ({ camera, sound, audioLoader }) => {
+import { toast } from "react-toastify";
+import * as THREE from "three";
+
+const RaycasterComponent = ({ camera }) => {
   const { scene } = useThree();
   const { ws, roomId } = useContext(RoomContext);
   const raycaster = useRef(new Raycaster());
@@ -14,46 +16,38 @@ const RaycasterComponent = ({ camera, sound, audioLoader }) => {
   const { turn, players } = config;
   const turnRef = useRef(turn);
   const intersectedObjectRef = useRef(null);
-  const temp = useRef(false);
+  const soundRef = useRef(null);
+
+  useEffect(() => {
+    // Initialize the audio loader and sound
+    const listener = new THREE.AudioListener();
+    camera.add(listener);
+    const sound = new THREE.Audio(listener);
+    const audioLoader = new THREE.AudioLoader();
+    audioLoader.load("/sounds/gun_audio.mp3", (buffer) => {
+      sound.setBuffer(buffer);
+      sound.setVolume(1);
+    });
+    soundRef.current = sound;
+
+    return () => {
+      camera.remove(listener);
+    };
+  }, [camera]);
 
   const handleClick = () => {
     const currentIntersectedObject = intersectedObjectRef.current;
-    const soundUrl = temp.current ? "sounds/gun_audio.mp3" : "sounds/player_death.mp3";
-    console.log(soundUrl);
-    audioLoader.load(soundUrl, function (buffer) {
-      sound.setBuffer(buffer);
-      sound.setVolume(1);
-      sound.stop();
-      sound.play();
-    });
-
-    temp.current = !temp.current;
-    try {
-      console.log(currentIntersectedObject.userData);
-    } catch (err) {}
     if (!turnRef.current) {
       toast.warn("Not Your Turn Now");
       return;
     }
-    if (
-      currentIntersectedObject?.userData?.lives &&
-      currentIntersectedObject.userData.lives <= 0
-    ) {
-      toast.warn("Cant Shoot A Dead Person");
-      return;
-    }
-    if (
-      currentIntersectedObject?.userData &&
-      currentIntersectedObject.userData &&
-      turnRef.current
-    ) {
-      console.log(currentIntersectedObject.userData);
-
+    if (currentIntersectedObject?.userData?.username) {
       ws.emit("shoot-player", {
         shooter: myData.username,
         victim: currentIntersectedObject.userData.username,
         roomId,
       });
+      soundRef.current.play();
     }
   };
 
@@ -69,29 +63,31 @@ const RaycasterComponent = ({ camera, sound, audioLoader }) => {
     turnRef.current = players.indexOf(myData.username) === turn;
     raycaster.current.set(camera.position, direction);
     const intersects = raycaster.current.intersectObjects(scene.children, true);
-    if (!intersects.userData) {
-      return;
-    }
-    if (intersects.length > 0) {
-      const intersected = intersects[0].object;
-      if (intersected !== intersectedObjectRef.current) {
-        if (intersectedObjectRef.current) {
-          intersectedObjectRef.current.material.color.set(
-            intersectedObjectRef.current.originalColor
-          );
+
+    let foundValidIntersection = false;
+    for (let i = 0; i < intersects.length; i++) {
+      const intersected = intersects[i].object;
+      if (intersected.userData && intersected.userData.username) {
+        foundValidIntersection = true;
+        if (intersected !== intersectedObjectRef.current) {
+          if (intersectedObjectRef.current) {
+            intersectedObjectRef.current.material.color.set(
+              intersectedObjectRef.current.originalColor
+            );
+          }
+          intersected.originalColor = intersected.material.color.getHex();
+          intersected.material.color.set("purple");
+          intersectedObjectRef.current = intersected;
         }
-        intersected.originalColor = intersected.material.color.getHex();
-        intersected.material.color.set(0xffff00);
-        intersectedObjectRef.current = intersected;
+        break;
       }
-    } else {
-      // Reset the color of the previously intersected object
-      if (intersectedObjectRef.current) {
-        intersectedObjectRef.current.material.color.set(
-          intersectedObjectRef.current.originalColor
-        );
-        intersectedObjectRef.current = null;
-      }
+    }
+
+    if (!foundValidIntersection && intersectedObjectRef.current) {
+      intersectedObjectRef.current.material.color.set(
+        intersectedObjectRef.current.originalColor
+      );
+      intersectedObjectRef.current = null;
     }
   });
 
