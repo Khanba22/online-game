@@ -1,8 +1,8 @@
 import { Icosahedron } from "@react-three/drei";
-import React, { useRef } from "react";
+import React from "react";
 import { Player } from "./Player";
 import { Chair } from "./Chair";
-import { useFrame } from "react-three-fiber";
+
 
 const PlayerComponent = ({ playerData, id }) => {
   const player = playerData;

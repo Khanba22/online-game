@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   PointerLockControls,
@@ -23,8 +23,10 @@ const Scene = ({ turn }) => {
   const data = useSelector((state) => state.myPlayerData);
   const playerData = useSelector((state) => state.otherPlayerData);
   const myRef = useRef(null);
+  const pointerLockRef = useRef(null);
 
   const { position } = data;
+  const locked = useRef(false);
 
   useFrame(() => {
     if (position) {
@@ -35,6 +37,15 @@ const Scene = ({ turn }) => {
       // camera.position.set(-1.4, 3, -2);
     }
   });
+
+  useEffect(() => {
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        console.log(e.key);
+        pointerLockRef.current.unlock();
+      }
+    });
+  }, []);
 
   return (
     <>
@@ -64,16 +75,17 @@ const Scene = ({ turn }) => {
         intensity={0.4}
         color={"#505050"}
       />
-      {Object.keys(playerData).map((key,id) => {
+      {Object.keys(playerData).map((key, id) => {
         const player = playerData[key];
         return (
           <>
-            <PlayerComponent id = {id} playerData={player} />
+            <PlayerComponent id={id} playerData={player} />
           </>
         );
       })}
       <Map position={[0, -1.4, 0]} myRef={myRef} />
       <RaycasterComponent
+        isLocked={locked}
         sound={sound}
         turn={turn}
         camera={camera}
@@ -81,7 +93,13 @@ const Scene = ({ turn }) => {
         playerData={playerData}
       />
       {/* <OrbitControls zoom0={0} position0={[10, 10, 10]} ref={myRef} /> */}
-      <PointerLockControls />
+      <PointerLockControls
+        ref={pointerLockRef}
+        onUnlock={() => {
+          locked.current = false;
+          // console.log("lock Released");
+        }}
+      />
     </>
   );
 };

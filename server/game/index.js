@@ -66,7 +66,6 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
       const damage = room[shooter].hasDoubleDamage ? 2 : 1;
       var livesTaken = 0;
       const shooterDetails = room[shooter];
-      const victimDetails = room[victim];
       if (!shooterDetails.hasDoubleTurn) {
         decideTurn(roomId);
       }

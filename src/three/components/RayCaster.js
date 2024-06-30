@@ -6,7 +6,7 @@ import { RoomContext } from "../../contexts/socketContext";
 import { toast } from "react-toastify";
 import * as THREE from "three";
 
-const RaycasterComponent = ({ camera }) => {
+const RaycasterComponent = ({ camera, isLocked }) => {
   const { scene } = useThree();
   const { ws, roomId } = useContext(RoomContext);
   const raycaster = useRef(new Raycaster());
@@ -35,7 +35,13 @@ const RaycasterComponent = ({ camera }) => {
     };
   }, [camera]);
 
+
+
   const handleClick = () => {
+    if (isLocked.current) {
+      console.log("Lock Acquired Click");
+    }
+    isLocked.current = true
     const currentIntersectedObject = intersectedObjectRef.current;
     if (!turnRef.current) {
       toast.warn("Not Your Turn Now");
@@ -47,6 +53,7 @@ const RaycasterComponent = ({ camera }) => {
         victim: currentIntersectedObject.userData.username,
         roomId,
       });
+      soundRef.current.stop();
       soundRef.current.play();
     }
   };
@@ -56,6 +63,7 @@ const RaycasterComponent = ({ camera }) => {
     return () => {
       window.removeEventListener("click", handleClick);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useFrame(() => {

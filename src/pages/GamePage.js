@@ -48,6 +48,10 @@ const GamePage = () => {
     });
   };
   const roundStart = ({ bulletArr, equipments }) => {
+    const audio = new Audio("/sounds/countdown.mp3"); // Create an audio object
+    setTimeout(() => {
+      audio.play();
+    }, 1000); // Play the sound
     var index = 3;
     var liveCount = 0;
     bulletArr.forEach((bullet) => {
