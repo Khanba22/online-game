@@ -6,17 +6,27 @@ const equipmentList = [
   "doubleTurn",
 ];
 
+function createRandomizedArray(n, m) {
+  // Create an array with n true values and m false values
+  let arr = new Array(n).fill(true).concat(new Array(m).fill(false));
+
+  // Function to shuffle the array
+  function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+  }
+  shuffle(arr);
+  return arr;
+}
 
 const gameHandler = (socket, rooms, roomName, roomConfig) => {
   const startRound = ({ roomId }) => {
-    const bulletCount = Math.floor(Math.random() * 6) + 4;
-    var bulletArr = [];
+    const live = Math.floor(Math.random() * 4);
+    const fakes = Math.floor(Math.random() * 4);
+    let bulletArr = createRandomizedArray(live, fakes);
     var equipments = {};
-    for (let int = 0; int < bulletCount; int++) {
-      const isLive = Math.random() < 0.6 ? true : false;
-      bulletArr.push(isLive);
-    }
-
     Object.keys(roomName[roomId]).forEach((member) => {
       equipments = { ...equipments, [member]: {} };
       for (let index = 0; index < 2; index++) {
@@ -33,11 +43,17 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
       bulletArr,
       equipments,
       turn: roomConfig[roomId].turn,
+      live,
+      fakes,
+      playerTurn: Object.keys(roomName[roomId])[roomConfig[roomId].turn],
     });
     socket.to(roomId).emit("round-started", {
       bulletArr,
       equipments,
+      live,
+      fakes,
       turn: roomConfig[roomId].turn,
+      playerTurn: Object.keys(roomName[roomId])[roomConfig[roomId].turn],
     });
   };
 
@@ -56,7 +72,6 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
       i--;
     }
     gameDetails.turn = turn;
-    console.log("", gameDetails.turn);
   };
 
   const shootPlayer = ({ shooter, victim, roomId }) => {
@@ -70,9 +85,9 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
         decideTurn(roomId);
       }
 
-      const isBulletLive = gameDetails.bulletArr.pop()
-      console.log(isBulletLive , gameDetails.bulletArr)
-      if (!room[victim].hasShield || isBulletLive) {
+      const isBulletLive = gameDetails.bulletArr.pop();
+      console.log(isBulletLive, gameDetails.bulletArr);
+      if (!room[victim].hasShield && isBulletLive) {
         room[victim].lives -= damage;
         livesTaken = damage;
       }
@@ -89,15 +104,19 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
         victim,
         livesTaken: livesTaken,
         currentTurn: gameDetails.turn,
+        playerTurn: Object.keys(room)[gameDetails.turn],
       });
       socket.emit("player-shot", {
         shooter,
         victim,
         livesTaken: livesTaken,
         currentTurn: gameDetails.turn,
+        playerTurn: Object.keys(room)[gameDetails.turn],
       });
       if (gameDetails.bulletArr.length === 0) {
-        startRound({roomId})
+        setTimeout(() => {
+          startRound({ roomId });
+        }, 5000);
       }
     } catch (error) {
       console.log(error);

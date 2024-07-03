@@ -19,8 +19,8 @@ const io = new Server(server, {
   }
 });
 
-io.on("connection", (socket) => {
 
+io.on("connection", (socket) => {
   roomHandler(socket,rooms,roomName,roomConfig);
   gameHandler(socket,rooms,roomName,roomConfig);
   socket.on("disconnect", () => {

@@ -7,12 +7,14 @@ const GameConfig = createSlice({
     turn: 0,
     bulletArr: [],
     deadUsers: 0,
+    playerTurn:""
   },
   reducers: {
     updateGameTurn: (state, action) => {
       console.log(action.payload);
       return {
         ...state,
+        playerTurn:action.payload.playerTurn,
         turn: action.payload.turn,
       };
     },
@@ -37,6 +39,6 @@ const GameConfig = createSlice({
   },
 });
 
-export const { updateGameTurn, setPlayerArray, setBulletArr, removeBullet } =
+export const { updateGameTurn, setPlayerArray, setBulletArr, removeBulletArr } =
   GameConfig.actions;
 export default GameConfig.reducer;

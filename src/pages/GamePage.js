@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useRef } from "react";
 // import { useParams } from "react-router-dom";
 import { RoomContext } from "../contexts/socketContext";
 import MainCanvas from "../three/Pages/MainCanvas";
@@ -7,27 +7,42 @@ import { useDispatch, useSelector } from "react-redux";
 import { addEquipment, reduceMyLife } from "../redux/PlayerDataReducer";
 import { reduceLife } from "../redux/AllPlayerReducer";
 import {
-  removeBullet,
+  removeBulletArr,
   setBulletArr,
   updateGameTurn,
 } from "../redux/GameConfig";
 import { toast } from "react-toastify";
+import GameUI from "../three/UI/GameUI";
 
 const GamePage = () => {
   // const { id } = useParams();
-  const { ws, roomId, isAdmin} = useContext(RoomContext);
+  const { ws, roomId, isAdmin } = useContext(RoomContext);
   const dispatch = useDispatch();
   const gameConfig = useSelector((state) => state.gameConfig);
-  const { turn } = gameConfig;
+  const { turn, bulletArr, playerTurn } = gameConfig;
   const data = useSelector((state) => state.myPlayerData);
-  const { username } = data;
-  const shotPlayer = ({ shooter, victim, livesTaken, currentTurn }) => {
+  const { username, lives } = data;
+
+  const shotPlayer = ({
+    shooter,
+    victim,
+    livesTaken,
+    currentTurn,
+    playerTurn,
+  }) => {
+    const sound =
+      livesTaken !== 0 ? "/sounds/gun_shoot.mp3" : "/sounds/fakeBullet.mp3";
+    const audio = new Audio(sound);
+    audio.play();
+    console.log(livesTaken);
+    toast.info(`${livesTaken !== 0 ? "Bullet Was Live" : "Bullet Was Fake"}`);
     dispatch({
-      type: `${removeBullet}`,
+      type: `${removeBulletArr}`,
     });
     dispatch({
       type: `${updateGameTurn}`,
       payload: {
+        playerTurn: playerTurn,
         turn: currentTurn,
       },
     });
@@ -47,18 +62,20 @@ const GamePage = () => {
       },
     });
   };
-  const roundStart = ({ bulletArr, equipments }) => {
+  const roundStart = ({
+    bulletArr,
+    equipments,
+    live,
+    fakes,
+    turn,
+    playerTurn,
+  }) => {
     const audio = new Audio("/sounds/countdown.mp3"); // Create an audio object
     setTimeout(() => {
       audio.play();
-    }, 1000); // Play the sound
+    }, 1000);
     var index = 3;
-    var liveCount = 0;
-    bulletArr.forEach((bullet) => {
-      if (bullet) {
-        liveCount += 1;
-      }
-    });
+    console.log(playerTurn , "PLayer Turn in Round start")
     const interVal = setInterval(() => {
       if (index !== 0) {
         toast.info(`Round Starting In ${index}`);
@@ -66,14 +83,18 @@ const GamePage = () => {
       if (index === 0) {
         clearInterval(interVal);
         toast.info(
-          `Starting Next Round, Live Bullets : ${liveCount} , Fake Bullets : ${
-            bulletArr.length - liveCount
-          }`
+          `Starting Next Round, Live Bullets : ${live} , Fake Bullets : ${fakes}`
         );
       }
       index--;
     }, 1000);
-
+    dispatch({
+      type: `${updateGameTurn}`,
+      payload: {
+        turn,
+        playerTurn,
+      },
+    });
     dispatch({
       type: `${setBulletArr}`,
       payload: {
@@ -106,7 +127,7 @@ const GamePage = () => {
   return (
     <>
       {/* <SettingsTab show={show} handleShow={handleShow} /> */}
-      <EquipmentBar />
+      <GameUI turn={turn} playerTurn={playerTurn} lives={lives} round={0} />
       <MainCanvas turn={turn} />
       {isAdmin && <button onClick={startNextRound}>Start Next Round</button>}
       <button

@@ -3,21 +3,28 @@ import { useDispatch, useSelector } from "react-redux";
 import { RoomContext } from "../../contexts/socketContext";
 import { useEquipment } from "../../redux/PlayerDataReducer";
 import { usePlayerEquipment } from "../../redux/AllPlayerReducer";
+import "./EquipmentBar.css"; // Make sure to create and import the CSS file
 
 const EquipmentBar = () => {
   const { ws, roomId } = useContext(RoomContext);
   const data = useSelector((state) => state.myPlayerData);
   const { equipment, username } = data;
   const dispatch = useDispatch();
-
+  const icons = [
+    "looker.png",
+    "medicine.png",
+    "return.png",
+    "shield.png",
+    "skull.png",
+  ];
   return (
-    <div className="absolute h-14 w-2/5 bottom-8 left-0 right-0 m-auto flex justify-evenly items-center">
+    <div className="equipment-bar">
       {equipment &&
-        Object.keys(equipment).map((eq) => {
+        Object.keys(equipment).map((eq, i) => {
           return (
-            <div key={eq} className="z-40">
+            <div key={eq} className="equipment-item">
               <button
-                className="z-40 cursor-pointer equipmentButton"
+                className="equipment-button"
                 disabled={equipment[eq] === 0}
                 onClick={() => {
                   ws.emit("use-equipment", {
@@ -40,9 +47,9 @@ const EquipmentBar = () => {
                   });
                 }}
               >
-                {eq}
+                <img src={`/assets/${eq}.png`} alt={eq} />
+                <span className="equipment-count">{equipment[eq]}</span>
               </button>
-              {equipment[eq]}
             </div>
           );
         })}

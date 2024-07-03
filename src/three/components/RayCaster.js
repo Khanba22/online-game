@@ -13,48 +13,35 @@ const RaycasterComponent = ({ camera, isLocked }) => {
   const direction = new Vector3();
   const config = useSelector((state) => state.gameConfig);
   const myData = useSelector((state) => state.myPlayerData);
-  const { turn, players } = config;
+  const { turn, players, bulletArr } = config;
   const turnRef = useRef(turn);
   const intersectedObjectRef = useRef(null);
-  const soundRef = useRef(null);
+
+  const bulletArrRef = useRef(bulletArr);
 
   useEffect(() => {
-    // Initialize the audio loader and sound
-    const listener = new THREE.AudioListener();
-    camera.add(listener);
-    const sound = new THREE.Audio(listener);
-    const audioLoader = new THREE.AudioLoader();
-    audioLoader.load("/sounds/gun_audio.mp3", (buffer) => {
-      sound.setBuffer(buffer);
-      sound.setVolume(1);
-    });
-    soundRef.current = sound;
-
-    return () => {
-      camera.remove(listener);
-    };
-  }, [camera]);
-
-
+    bulletArrRef.current = bulletArr;
+    console.log(bulletArr,"Bullet Arr Now")
+  }, [bulletArr]);
 
   const handleClick = () => {
-    if (isLocked.current) {
-      console.log("Lock Acquired Click");
-    }
-    isLocked.current = true
+    isLocked.current = true;
     const currentIntersectedObject = intersectedObjectRef.current;
     if (!turnRef.current) {
       toast.warn("Not Your Turn Now");
       return;
     }
+    if (bulletArrRef.current.length === 0) {
+      console.log("Round Over")
+      return;
+    }
     if (currentIntersectedObject?.userData?.username) {
+      console.log("Shot Player",bulletArrRef.current.length);
       ws.emit("shoot-player", {
         shooter: myData.username,
         victim: currentIntersectedObject.userData.username,
         roomId,
       });
-      soundRef.current.stop();
-      soundRef.current.play();
     }
   };
 

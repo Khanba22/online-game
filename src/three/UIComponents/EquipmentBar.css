@@ -1,0 +1,61 @@
+.equipment-bar {
+    position: absolute;
+    height: 76px;
+    width: 40%;
+    bottom: 62px;
+    left: 0;
+    right: 0;
+    margin: auto;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid black;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.equipment-item {
+    position: relative;
+    z-index: 40;
+}
+
+.equipment-button {
+    position: relative;
+    z-index: 40;
+    cursor: pointer;
+    border: 2px solid black;
+    padding: 1px;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 1;
+    transition: all 0.3s ease;
+    border-radius: 10px;
+}
+
+.equipment-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.equipment-button:hover:not(:disabled) {
+    transform: scale(1.1);
+}
+
+.equipment-button img {
+    backdrop-filter: blur();
+    width: 64px;
+    height: 64px;
+}
+
+.equipment-count {
+    position: absolute;
+    bottom: 2px;
+    left: 2px;
+    background: white;
+    color: black;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 50;
+}

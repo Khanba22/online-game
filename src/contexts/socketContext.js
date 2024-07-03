@@ -14,32 +14,33 @@ const WS = "http://localhost:8080";
 export const RoomContext = createContext(null);
 const ws = socketIoClient(WS);
 export const RoomProvider = ({ children }) => {
-  const [joined, setJoined] = useState(false);
   const navigate = useNavigate();
-  const [me, setMe] = useState();
-  const myPlayerData = useSelector((state) => state.myPlayerData);
-  const { username } = myPlayerData;
   const dispatch = useDispatch();
-  const [peers, dispatched] = useReducer(peerReducer, {});
+
+  // States
+  const [joined, setJoined] = useState(false);
+  const [me, setMe] = useState();
   const [roomId, setRoomId] = useState("");
   const [stream, setStream] = useState(null);
-  const adminRef = useRef(false)
-  const [isAdmin,setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [myPeerId, setMyPeerId] = useState("");
+
+  // Selectors
+  const myPlayerData = useSelector((state) => state.myPlayerData);
+  const { username } = myPlayerData;
+  const [peers, dispatched] = useReducer(peerReducer, {});
+
+  // Refs
+  const adminRef = useRef(false);
   const usernameRef = useRef(null);
-  useEffect(() => {
-    if (username) {
-      usernameRef.current = username;
-    }
-  });
+
+  // Functions
   const enterRoom = ({ roomId }) => {
     navigate(`/room/${roomId}`);
   };
-
   const removePeer = ({ peerId }) => {
     dispatched(removePeerAction(peerId));
   };
-
   const getUsers = ({ roomId, memberNames }) => {
     setRoomId(roomId);
     dispatch({
@@ -66,11 +67,12 @@ export const RoomProvider = ({ children }) => {
       },
     });
   };
-
   const startGame = ({ roomId }) => {
     setRoomId(roomId);
     navigate(`/game/${roomId}`);
   };
+
+  // useEffects
 
   useEffect(() => {
     const meId = uuidv4();
@@ -102,6 +104,12 @@ export const RoomProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    if (username) {
+      usernameRef.current = username;
+    }
+  });
+
+  useEffect(() => {
     if (!me) return;
     if (!stream) return;
 
@@ -123,7 +131,7 @@ export const RoomProvider = ({ children }) => {
         dispatched(addPeerAction(call.peer, peerStream, caller));
       });
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [me, stream]);
 
   return (
