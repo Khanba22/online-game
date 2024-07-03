@@ -11,7 +11,6 @@ const GameConfig = createSlice({
   },
   reducers: {
     updateGameTurn: (state, action) => {
-      console.log(action.payload);
       return {
         ...state,
         playerTurn:action.payload.playerTurn,

@@ -17,7 +17,6 @@ const AudioControls = () => {
             const isYou = peerId === myPeerId;
             const admin = Object.keys(playerData)[0];
             const myName = peers[peerId].username === "You"?usernameRef.current:peers[peerId].username;
-            console.log(admin, myName, i);
             adminRef.current = admin === myName
             return (
               <VideoPlayer

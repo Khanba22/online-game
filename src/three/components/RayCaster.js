@@ -21,22 +21,31 @@ const RaycasterComponent = ({ camera, isLocked }) => {
 
   useEffect(() => {
     bulletArrRef.current = bulletArr;
-    console.log(bulletArr,"Bullet Arr Now")
+    console.log(bulletArr)
   }, [bulletArr]);
 
+  useEffect(() => {
+    
+  }, [isLocked]);
+
   const handleClick = () => {
-    isLocked.current = true;
+    if (!isLocked.current) {
+      return;
+    }
     const currentIntersectedObject = intersectedObjectRef.current;
     if (!turnRef.current) {
       toast.warn("Not Your Turn Now");
       return;
     }
     if (bulletArrRef.current.length === 0) {
-      console.log("Round Over")
+      toast.info("Round Over");
+      setTimeout(() => {
+        toast.info("Starting Next Round");
+      }, 2000);
       return;
     }
     if (currentIntersectedObject?.userData?.username) {
-      console.log("Shot Player",bulletArrRef.current.length);
+      console.log("Shot Player", bulletArrRef.current.length);
       ws.emit("shoot-player", {
         shooter: myData.username,
         victim: currentIntersectedObject.userData.username,

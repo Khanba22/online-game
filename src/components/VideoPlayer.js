@@ -12,7 +12,6 @@ const VideoPlayer = ({ stream, username, isAdmin, you }) => {
   };
 
   useEffect(() => {
-    console.log(username , stream)
     if (videoRef.current) {
       videoRef.current.srcObject = stream;
     }

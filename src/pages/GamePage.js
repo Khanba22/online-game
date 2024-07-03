@@ -25,17 +25,18 @@ const GamePage = () => {
 
   const shotPlayer = ({
     shooter,
+    isBulletLive,
     victim,
     livesTaken,
     currentTurn,
     playerTurn,
   }) => {
-    const sound =
-      livesTaken !== 0 ? "/sounds/gun_shoot.mp3" : "/sounds/fakeBullet.mp3";
+    const sound = isBulletLive
+      ? "/sounds/gun_shoot.mp3"
+      : "/sounds/fakeBullet.mp3";
     const audio = new Audio(sound);
     audio.play();
-    console.log(livesTaken);
-    toast.info(`${livesTaken !== 0 ? "Bullet Was Live" : "Bullet Was Fake"}`);
+    toast.info(`${isBulletLive ? "Bullet Was Live" : "Bullet Was Fake"}`);
     dispatch({
       type: `${removeBulletArr}`,
     });
@@ -75,7 +76,6 @@ const GamePage = () => {
       audio.play();
     }, 1000);
     var index = 3;
-    console.log(playerTurn , "PLayer Turn in Round start")
     const interVal = setInterval(() => {
       if (index !== 0) {
         toast.info(`Round Starting In ${index}`);
@@ -109,10 +109,17 @@ const GamePage = () => {
     });
   };
 
+  const roundOver = ()=>{
+    toast.info("Round Over");
+    setTimeout(() => {
+      toast.info("Starting Next Round")
+    }, 1000);
+  }
+
   useEffect(() => {
     ws.on("player-shot", shotPlayer);
     ws.on("round-started", roundStart);
-
+    ws.on("round-over",roundOver)
     return () => {
       ws.off("round-started", roundStart);
       ws.off("player-shot", shotPlayer);

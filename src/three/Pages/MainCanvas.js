@@ -1,14 +1,17 @@
-import React, { useEffect, useRef } from "react";
+import React, { useContext, useEffect, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { PointerLockControls } from "@react-three/drei";
 import "./styles.css"; // Import the styles for the crosshair
 import RaycasterComponent from "../components/RayCaster";
 import Crosshair from "../components/Crosshair";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import PlayerComponent from "../components/PlayerComponent";
 import { Map } from "../components/Map";
 import * as THREE from "three";
-import { ThreeMFLoader } from "three/examples/jsm/Addons.js";
+import { RoomContext } from "../../contexts/socketContext";
+import { useEquipment } from "../../redux/PlayerDataReducer";
+import { usePlayerEquipment } from "../../redux/AllPlayerReducer";
+import { toast } from "react-toastify";
 
 const pointLightData = [
   {
@@ -39,12 +42,14 @@ const Scene = ({ turn }) => {
   const playerData = useSelector((state) => state.otherPlayerData);
   const myRef = useRef(null);
   const pointerLockRef = useRef(null);
-
+  const dispatch = useDispatch();
+  const { ws, roomId } = useContext(RoomContext);
+  const { equipment, username } = data;
   const { position } = data;
   const locked = useRef(false);
   useEffect(() => {
     camera.rotateOnAxis(new THREE.Vector3(0, 0, 1));
-    camera.aspect = 2
+    camera.aspect = 2;
     camera.lookAt(new THREE.Vector3(0, 1, 0));
   }, []);
 
@@ -61,8 +66,7 @@ const Scene = ({ turn }) => {
   useEffect(() => {
     window.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
-        console.log(e.key);
-        pointerLockRef.current.unlock();
+        pointerLockRef.current.unlock()
       }
     });
   }, []);
@@ -94,7 +98,12 @@ const Scene = ({ turn }) => {
       />
       <PointerLockControls
         ref={pointerLockRef}
+        onLock={() => {
+          console.log("Lock Event");
+          locked.current = true;
+        }}
         onUnlock={() => {
+          console.log("UnLock Event");
           locked.current = false;
         }}
       />

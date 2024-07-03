@@ -28,7 +28,6 @@ const Room = () => {
   }, [joined, username, playerData, dispatch]);
   useEffect(() => {
     if (me && joined) {
-      console.log("Join Room Emitted")
       ws.emit("join-room", { roomId: id, peerId: me._id, username });
     }
   }, [me, joined, ws, id, username]);

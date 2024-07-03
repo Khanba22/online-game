@@ -23,8 +23,8 @@ function createRandomizedArray(n, m) {
 
 const gameHandler = (socket, rooms, roomName, roomConfig) => {
   const startRound = ({ roomId }) => {
-    const live = Math.floor(Math.random() * 4);
-    const fakes = Math.floor(Math.random() * 4);
+    const live = Math.floor(Math.random() * 3) + Math.floor(Math.random() * 2);
+    const fakes = Math.floor(Math.random() * 3) + Math.floor(Math.random() * 2);
     let bulletArr = createRandomizedArray(live, fakes);
     var equipments = {};
     Object.keys(roomName[roomId]).forEach((member) => {
@@ -86,8 +86,8 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
       }
 
       const isBulletLive = gameDetails.bulletArr.pop();
-      console.log(isBulletLive, gameDetails.bulletArr);
-      if (!room[victim].hasShield && isBulletLive) {
+      console.log("", isBulletLive);
+      if (!room[victim].isShielded && isBulletLive) {
         room[victim].lives -= damage;
         livesTaken = damage;
       }
@@ -100,6 +100,7 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
       room[victim] = { ...room[victim], hasShield: false };
 
       socket.to(roomId).emit("player-shot", {
+        isBulletLive,
         shooter,
         victim,
         livesTaken: livesTaken,
@@ -107,6 +108,7 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
         playerTurn: Object.keys(room)[gameDetails.turn],
       });
       socket.emit("player-shot", {
+        isBulletLive,
         shooter,
         victim,
         livesTaken: livesTaken,
@@ -114,6 +116,7 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
         playerTurn: Object.keys(room)[gameDetails.turn],
       });
       if (gameDetails.bulletArr.length === 0) {
+        socket.emit("round-over")
         setTimeout(() => {
           startRound({ roomId });
         }, 5000);

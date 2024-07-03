@@ -7,7 +7,6 @@ import React from "react";
 import { useGLTF } from "@react-three/drei";
 
 export function Chair(props) {
-  console.log(props.userData);
   const { nodes, materials } = useGLTF("/models/chair/chair.gltf");
   return (
     <group {...props} dispose={null}>
