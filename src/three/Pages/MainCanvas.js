@@ -42,14 +42,9 @@ const Scene = ({ turn }) => {
   const playerData = useSelector((state) => state.otherPlayerData);
   const myRef = useRef(null);
   const pointerLockRef = useRef(null);
-  const dispatch = useDispatch();
-  const { ws, roomId } = useContext(RoomContext);
-  const { equipment, username } = data;
   const { position } = data;
   const locked = useRef(false);
   useEffect(() => {
-    camera.rotateOnAxis(new THREE.Vector3(0, 0, 1));
-    camera.aspect = 2;
     camera.lookAt(new THREE.Vector3(0, 1, 0));
   }, []);
 
@@ -65,7 +60,8 @@ const Scene = ({ turn }) => {
 
   useEffect(() => {
     window.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
+      console.log(e.key)
+      if (e.key === "Alt") {
         pointerLockRef.current.unlock()
       }
     });

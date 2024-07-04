@@ -81,23 +81,21 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
       const damage = room[shooter].hasDoubleDamage ? 2 : 1;
       var livesTaken = 0;
       const shooterDetails = room[shooter];
-      if (!shooterDetails.hasDoubleTurn) {
+      const isBulletLive = gameDetails.bulletArr.pop();
+      if (!shooterDetails.hasDoubleTurn && !(shooter === victim && !isBulletLive)) {
         decideTurn(roomId);
       }
-
-      const isBulletLive = gameDetails.bulletArr.pop();
       if (!room[victim].isShielded && isBulletLive) {
         room[victim].lives -= damage;
         livesTaken = damage;
       }
-      console.log(`Lives Taken from ${victim}`, livesTaken);
       room[shooter] = {
         ...room[shooter],
         hasDoubleDamage: false,
         hasDoubleTurn: false,
         canLookBullet: false,
       };
-      room[victim] = { ...room[victim], hasShield: false };
+      room[victim] = { ...room[victim], isShielded: false };
 
       socket.to(roomId).emit("player-shot", {
         isBulletLive,

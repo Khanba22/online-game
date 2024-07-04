@@ -1,8 +1,9 @@
 import React from "react";
 import "./Stats.css";
+import { useSelector } from "react-redux";
 
 const Stats = ({ lives, round, turn, otherStats, playerTurn }) => {
-  const renderHearts = () => {
+  const renderHearts = (lives) => {
     const hearts = [];
     for (let i = 0; i < lives; i++) {
       hearts.push(
@@ -12,11 +13,24 @@ const Stats = ({ lives, round, turn, otherStats, playerTurn }) => {
     return hearts;
   };
 
+  const otherPlayerData = useSelector((state) => state.otherPlayerData);
+  const players = Object.keys(otherPlayerData);
+
   return (
     <div className="stats-container">
+      {players.map((player) => {
+        return (
+          <div className="stats-item">
+            <span>{player} : </span>
+            <div className="hearts">
+              {renderHearts(otherPlayerData[player].lives)}
+            </div>
+          </div>
+        );
+      })}
       <div className="stats-item">
         <span>Lives: </span>
-        <div className="hearts">{renderHearts()}</div>
+        <div className="hearts">{renderHearts(lives)}</div>
       </div>
       <div className="stats-item">
         <span>Round: </span>

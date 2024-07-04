@@ -20,6 +20,9 @@ const EquipmentBar = () => {
                 className="equipment-button"
                 disabled={equipment[eq] === 0}
                 onClick={() => {
+                  if (eq === "looker") {
+                    
+                  }
                   ws.emit("use-equipment", {
                     roomId,
                     equipmentType: eq,
