@@ -10,13 +10,6 @@ const EquipmentBar = () => {
   const data = useSelector((state) => state.myPlayerData);
   const { equipment, username } = data;
   const dispatch = useDispatch();
-  const icons = [
-    "looker.png",
-    "medicine.png",
-    "return.png",
-    "shield.png",
-    "skull.png",
-  ];
   return (
     <div className="equipment-bar">
       {equipment &&

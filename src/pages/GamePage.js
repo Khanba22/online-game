@@ -5,7 +5,7 @@ import MainCanvas from "../three/Pages/MainCanvas";
 import EquipmentBar from "../three/UIComponents/EquipmentBar";
 import { useDispatch, useSelector } from "react-redux";
 import { addEquipment, reduceMyLife } from "../redux/PlayerDataReducer";
-import { reduceLife } from "../redux/AllPlayerReducer";
+import { reduceLife, usePlayerEquipment } from "../redux/AllPlayerReducer";
 import {
   removeBulletArr,
   setBulletArr,
@@ -19,9 +19,10 @@ const GamePage = () => {
   const { ws, roomId, isAdmin } = useContext(RoomContext);
   const dispatch = useDispatch();
   const gameConfig = useSelector((state) => state.gameConfig);
-  const { turn, bulletArr, playerTurn } = gameConfig;
+  const { turn, playerTurn } = gameConfig;
   const data = useSelector((state) => state.myPlayerData);
   const { username, lives } = data;
+  const playerData = useSelector((state) => state.otherPlayerData)
 
   const shotPlayer = ({
     shooter,
@@ -109,17 +110,33 @@ const GamePage = () => {
     });
   };
 
-  const roundOver = ()=>{
+  const roundOver = () => {
     toast.info("Round Over");
     setTimeout(() => {
-      toast.info("Starting Next Round")
+      toast.info("Starting Next Round");
     }, 1000);
-  }
+  };
+
+  const usedEquipment = ({ user, equipment }) => {
+    if (equipment === "heals") {
+      console.log(playerData[user] , "Equipment Used")
+      dispatch({
+        type: `${usePlayerEquipment}`,
+        payload: {
+          user: user,
+          equipmentType: equipment,
+        },
+      });
+      console.log()
+    }
+    toast.info(`${user} Activated ${equipment}`);
+  };
 
   useEffect(() => {
     ws.on("player-shot", shotPlayer);
     ws.on("round-started", roundStart);
-    ws.on("round-over",roundOver)
+    ws.on("round-over", roundOver);
+    ws.on("used-equipment", usedEquipment);
     return () => {
       ws.off("round-started", roundStart);
       ws.off("player-shot", shotPlayer);
@@ -140,7 +157,7 @@ const GamePage = () => {
       <button
         className="bg-teal-500 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition duration-300"
         onClick={() => {
-          console.log({ ...data, ...gameConfig });
+          console.log(playerData);
         }}
       >
         Log My Data

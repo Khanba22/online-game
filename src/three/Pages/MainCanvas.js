@@ -99,11 +99,9 @@ const Scene = ({ turn }) => {
       <PointerLockControls
         ref={pointerLockRef}
         onLock={() => {
-          console.log("Lock Event");
           locked.current = true;
         }}
         onUnlock={() => {
-          console.log("UnLock Event");
           locked.current = false;
         }}
       />
