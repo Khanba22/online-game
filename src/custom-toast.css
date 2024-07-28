@@ -1,0 +1,29 @@
+.custom-toast {
+    background-color: transparent !important;
+    color: white !important;
+    text-align: left;
+    text-wrap: nowrap;
+    box-shadow: none !important;
+  }
+  
+  .Toastify__toast-container--top-left {
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  
+  .Toastify__toast-theme--light {
+    background: transparent !important;
+  }
+  
+  .Toastify__toast {
+    background-color: transparent !important;
+    color: white !important;
+    box-shadow: none !important;
+  }
+  
+  .Toastify__toast-body {
+    background-color: transparent !important;
+    color: white !important;
+  }
+  

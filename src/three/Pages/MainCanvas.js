@@ -1,17 +1,13 @@
-import React, { useContext, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { PointerLockControls } from "@react-three/drei";
+import { OrbitControls, PointerLockControls } from "@react-three/drei";
 import "./styles.css"; // Import the styles for the crosshair
 import RaycasterComponent from "../components/RayCaster";
 import Crosshair from "../components/Crosshair";
-import { useDispatch, useSelector } from "react-redux";
-import PlayerComponent from "../components/PlayerComponent";
+import { useSelector } from "react-redux";
 import { Map } from "../components/Map";
 import * as THREE from "three";
-import { RoomContext } from "../../contexts/socketContext";
-import { useEquipment } from "../../redux/PlayerDataReducer";
-import { usePlayerEquipment } from "../../redux/AllPlayerReducer";
-import { toast } from "react-toastify";
+import PlayerMapper from "../components/PlayerMapper";
 
 const pointLightData = [
   {
@@ -48,10 +44,18 @@ const Scene = ({ turn }) => {
     camera.lookAt(new THREE.Vector3(0, 1, 0));
   }, []);
 
+  const tempData = [
+    { live: 5, position: [3.3, 0.19, 0.0] },
+    { live: 5, position: [0.9890437907365466, 0.19, 3.241785515479182] },
+    { live: 5, position: [-2.5940437907365466, 0.19, 1.878651166377898] },
+    { live: 5, position: [1.1940437907365475, 0.19, -3.178651166377897] },
+    { live: 5, position: [-3.0417855154791825, 0.19, -1.9890437907365458] },
+  ];
+
   useFrame(() => {
     if (position) {
       // Adjust the camera position based on player data
-      camera.position.set(position[0], position[1] + 1.5, position[2]);
+      camera.position.set(position[0], position[1] + 4, position[2]);
     } else {
       // Default camera position
       // camera.position.set(-1.4, 3, -2);
@@ -60,9 +64,9 @@ const Scene = ({ turn }) => {
 
   useEffect(() => {
     window.addEventListener("keydown", (e) => {
-      console.log(e.key)
-      if (e.key === "Alt") {
-        pointerLockRef.current.unlock()
+      console.log(e.key);
+      if (e.key === "x") {
+        pointerLockRef.current.unlock();
       }
     });
   }, []);
@@ -81,10 +85,7 @@ const Scene = ({ turn }) => {
           color={light.color}
         />
       ))}
-      {Object.keys(playerData).map((key, id) => {
-        const player = playerData[key];
-        return <PlayerComponent key={id} id={id} playerData={player} />;
-      })}
+      <PlayerMapper playerData={Object.values(playerData)} />
       <Map position={[0, -1.4, 0]} myRef={myRef} />
       <RaycasterComponent
         isLocked={locked}
@@ -101,6 +102,7 @@ const Scene = ({ turn }) => {
           locked.current = false;
         }}
       />
+      {/* <OrbitControls /> */}
     </>
   );
 };

@@ -118,7 +118,7 @@ const roomHandler = (socket, rooms, roomName, roomConfig) => {
       for (let index = 0; index < roomConfig[roomId].memberNo; index++) {
         roomName[roomId][arr[index]].position =
           playerPositionArr[roomConfig[roomId].memberNo].position[index];
-        roomName[roomId][arr[index]].angle =
+        roomName[roomId][arr[index]].rotation =
           playerPositionArr[roomConfig[roomId].memberNo].angle[index];
       }
       socket.to(roomId).emit("get-users", {

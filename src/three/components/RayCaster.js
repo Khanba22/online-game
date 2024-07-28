@@ -4,7 +4,6 @@ import { useSelector } from "react-redux";
 import { Raycaster, Vector3 } from "three";
 import { RoomContext } from "../../contexts/socketContext";
 import { toast } from "react-toastify";
-import * as THREE from "three";
 
 const RaycasterComponent = ({ camera, isLocked }) => {
   const { scene } = useThree();
@@ -21,12 +20,9 @@ const RaycasterComponent = ({ camera, isLocked }) => {
 
   useEffect(() => {
     bulletArrRef.current = bulletArr;
-    console.log(bulletArr)
   }, [bulletArr]);
 
-  useEffect(() => {
-    
-  }, [isLocked]);
+  useEffect(() => {}, [isLocked]);
 
   const handleClick = () => {
     if (!isLocked.current) {
@@ -45,7 +41,6 @@ const RaycasterComponent = ({ camera, isLocked }) => {
       return;
     }
     if (currentIntersectedObject?.userData?.username) {
-      console.log("Shot Player", bulletArrRef.current.length);
       ws.emit("shoot-player", {
         shooter: myData.username,
         victim: currentIntersectedObject.userData.username,
@@ -59,8 +54,7 @@ const RaycasterComponent = ({ camera, isLocked }) => {
     return () => {
       window.removeEventListener("click", handleClick);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isLocked, turn, bulletArr, players, myData.username, roomId, ws]);
 
   useFrame(() => {
     camera.getWorldDirection(direction);
@@ -70,17 +64,22 @@ const RaycasterComponent = ({ camera, isLocked }) => {
 
     let foundValidIntersection = false;
     for (let i = 0; i < intersects.length; i++) {
-      const intersected = intersects[i].object;
+      const intersected = intersects[i].object.parent;
       if (intersected.userData && intersected.userData.username) {
         foundValidIntersection = true;
+
         if (intersected !== intersectedObjectRef.current) {
           if (intersectedObjectRef.current) {
-            intersectedObjectRef.current.material.color.set(
-              intersectedObjectRef.current.originalColor
-            );
+            if (intersectedObjectRef.current.material) {
+              intersectedObjectRef.current.material.color.set(
+                intersectedObjectRef.current.originalColor
+              );
+            }
           }
-          intersected.originalColor = intersected.material.color.getHex();
-          intersected.material.color.set("purple");
+          if (intersected.material) {
+            intersected.originalColor = intersected.material.color.getHex();
+            intersected.material.color.set("purple");
+          }
           intersectedObjectRef.current = intersected;
         }
         break;
@@ -88,9 +87,11 @@ const RaycasterComponent = ({ camera, isLocked }) => {
     }
 
     if (!foundValidIntersection && intersectedObjectRef.current) {
-      intersectedObjectRef.current.material.color.set(
-        intersectedObjectRef.current.originalColor
-      );
+      if (intersectedObjectRef.current.material) {
+        intersectedObjectRef.current.material.color.set(
+          intersectedObjectRef.current.originalColor
+        );
+      }
       intersectedObjectRef.current = null;
     }
   });

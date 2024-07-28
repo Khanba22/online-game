@@ -6,6 +6,7 @@ import "./App.css";
 import GamePage from "./pages/GamePage";
 import { Bounce, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import "./custom-toast.css"
 
 const App = () => {
   return (
@@ -19,6 +20,7 @@ const App = () => {
         rtl={false}
         pauseOnFocusLoss
         draggable
+        toastClassName={"custom-toast"}
         pauseOnHover
         theme="colored"
         transition={Bounce}
