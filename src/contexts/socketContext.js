@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setPlayer } from "../redux/PlayerDataReducer";
 import { setOtherPlayer } from "../redux/AllPlayerReducer";
 import { setPlayerArray } from "../redux/GameConfig";
+import { toast } from "react-toastify";
 const WS = "http://localhost:8080";
 
 export const RoomContext = createContext(null);
@@ -85,7 +86,7 @@ export const RoomProvider = ({ children }) => {
     }
     try {
       navigator.mediaDevices
-        .getUserMedia({ audio: true, video: true })
+        .getUserMedia({ audio: true, video: false })
         .then((stream) => {
           setStream(stream);
           dispatched(addPeerAction(meId, stream));
@@ -99,6 +100,8 @@ export const RoomProvider = ({ children }) => {
     ws.on("user-disconnected", removePeer);
     ws.on("invalid-room", () => {
       console.error("The Room Code Is Invalid Or The Game has Already Started");
+      toast.error("Invalid Room Code")
+      navigate("/");
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

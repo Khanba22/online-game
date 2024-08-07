@@ -54,6 +54,7 @@ const RaycasterComponent = ({ camera, isLocked }) => {
     return () => {
       window.removeEventListener("click", handleClick);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLocked, turn, bulletArr, players, myData.username, roomId, ws]);
 
   useFrame(() => {

@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, Suspense } from "react";
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls, useGLTF, useAnimations } from "@react-three/drei";
+import { useGLTF, useAnimations } from "@react-three/drei";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils";
 
 const Player = ({

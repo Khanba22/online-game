@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, PointerLockControls } from "@react-three/drei";
+import { PointerLockControls } from "@react-three/drei";
 import "./styles.css"; // Import the styles for the crosshair
 import RaycasterComponent from "../components/RayCaster";
 import Crosshair from "../components/Crosshair";
@@ -42,15 +42,8 @@ const Scene = ({ turn }) => {
   const locked = useRef(false);
   useEffect(() => {
     camera.lookAt(new THREE.Vector3(0, 1, 0));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const tempData = [
-    { live: 5, position: [3.3, 0.19, 0.0] },
-    { live: 5, position: [0.9890437907365466, 0.19, 3.241785515479182] },
-    { live: 5, position: [-2.5940437907365466, 0.19, 1.878651166377898] },
-    { live: 5, position: [1.1940437907365475, 0.19, -3.178651166377897] },
-    { live: 5, position: [-3.0417855154791825, 0.19, -1.9890437907365458] },
-  ];
 
   useFrame(() => {
     if (position) {
