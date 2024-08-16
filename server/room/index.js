@@ -122,7 +122,7 @@ const roomHandler = (socket, rooms, roomName, roomConfig) => {
     } else if (rooms[roomId] && roomConfig[roomId].hasStarted) {
       console.log("Game has Already Started");
       console.log(disconnected[roomId]);
-      if (disconnected[roomId][username]) {
+      if (disconnected[roomId]?.[username]) {
         console.log("Disconnected User Trying To Reconnect");
       }
     } else {
@@ -130,6 +130,7 @@ const roomHandler = (socket, rooms, roomName, roomConfig) => {
     }
 
     socket.on("start-request", ({ roomId }) => {
+      console.log(roomName[roomId]);
       const members = Object.keys(roomName[roomId]);
       const { memberNo } = roomConfig[roomId];
       for (let i = 0; i < memberNo; i++) {

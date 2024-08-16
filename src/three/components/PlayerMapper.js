@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, Suspense } from "react";
 import { useGLTF, useAnimations } from "@react-three/drei";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils";
+import { Chair } from "./Chair";
 
 const Player = ({
   position,
@@ -43,7 +44,7 @@ const Player = ({
       dispose={null}
       position={position}
       rotation={rotateAngle}
-      scale={1.5}
+      scale={2.6}
     >
       {clonedScene.children.map((child) => (
         <primitive userData={userData} key={child.uuid} object={child} />
@@ -53,11 +54,13 @@ const Player = ({
 };
 
 const PlayerMapper = ({ playerData }) => {
-  console.log(playerData);
   return (
     <Suspense fallback={null}>
       {playerData.map((player, i) => (
-        <Player key={`player${i}`} {...player} />
+        <>
+          <Player key={`player${i}`} {...player} />
+          <Chair key = {`player${i}`} {...player} />
+        </>
       ))}
     </Suspense>
   );

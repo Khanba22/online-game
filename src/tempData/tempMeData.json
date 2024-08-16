@@ -1,0 +1,18 @@
+{
+  "username": "signature1",
+  "color": "red",
+  "lives": 5,
+  "equipment": {
+    "shield": 0,
+    "doubleDamage": 0,
+    "heals": 0,
+    "looker": 0,
+    "doubleTurn": 0
+  },
+  "isShielded": false,
+  "hasDoubleDamage": false,
+  "canLookBullet": false,
+  "hasDoubleTurn": false,
+  "position": [-2.59, 0.19, 1.88],
+  "rotation": [0, -0.7, 0]
+}

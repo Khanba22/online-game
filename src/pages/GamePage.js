@@ -13,6 +13,8 @@ import {
 } from "../redux/GameConfig";
 import { toast } from "react-toastify";
 import GameUI from "../three/UI/GameUI";
+import playerData from "../tempData/tempPlayerData.json"
+import data from "../tempData/tempMeData.json"
 
 const GamePage = () => {
   // const { id } = useParams();
@@ -20,9 +22,9 @@ const GamePage = () => {
   const dispatch = useDispatch();
   const gameConfig = useSelector((state) => state.gameConfig);
   const { turn, playerTurn } = gameConfig;
-  const data = useSelector((state) => state.myPlayerData);
+  // const data = useSelector((state) => state.myPlayerData);
   const { username, lives } = data;
-  const playerData = useSelector((state) => state.otherPlayerData)
+  // const playerData = useSelector((state) => state.otherPlayerData)
 
   const shotPlayer = ({
     shooter,
