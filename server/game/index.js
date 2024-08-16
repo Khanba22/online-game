@@ -62,7 +62,7 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
     const players = Object.keys(roomName[roomId]);
     var turn = (gameDetails.turn + 1) % gameDetails.memberNo;
 
-    var i = 100;
+    var i = 6;
     while (i) {
       if (roomName[roomId][players[turn]].lives === 0) {
         turn = (turn + 1) % gameDetails.memberNo;
@@ -77,33 +77,35 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
   const shootPlayer = ({ shooter, victim, roomId }) => {
     const gameDetails = roomConfig[roomId];
     try {
-      const room = roomName[roomId];
-      const damage = room[shooter].hasDoubleDamage ? 2 : 1;
+      const roomStats = roomName[roomId];
+      const damage = roomStats[shooter].hasDoubleDamage ? 2 : 1;
       var livesTaken = 0;
-      const shooterDetails = room[shooter];
+      const shooterDetails = roomStats[shooter];
       const isBulletLive = gameDetails.bulletArr.pop();
+      if (!roomStats[victim].isShielded && isBulletLive) {
+        roomStats[victim].lives = Math.max(0,roomStats[victim].lives - damage);
+        livesTaken = damage;
+      }
+      if (roomStats[victim].lives === 0) {
+        
+      }
       if (!shooterDetails.hasDoubleTurn && !(shooter === victim && !isBulletLive)) {
         decideTurn(roomId);
       }
-      if (!room[victim].isShielded && isBulletLive) {
-        room[victim].lives -= damage;
-        livesTaken = damage;
-      }
-      room[shooter] = {
-        ...room[shooter],
+      roomStats[shooter] = {
+        ...roomStats[shooter],
         hasDoubleDamage: false,
         hasDoubleTurn: false,
         canLookBullet: false,
       };
-      room[victim] = { ...room[victim], isShielded: false };
-
+      roomStats[victim] = { ...roomStats[victim], isShielded: false };
       socket.to(roomId).emit("player-shot", {
         isBulletLive,
         shooter,
         victim,
         livesTaken: livesTaken,
         currentTurn: gameDetails.turn,
-        playerTurn: Object.keys(room)[gameDetails.turn],
+        playerTurn: Object.keys(roomStats)[gameDetails.turn],
       });
       socket.emit("player-shot", {
         isBulletLive,
@@ -111,7 +113,7 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
         victim,
         livesTaken: livesTaken,
         currentTurn: gameDetails.turn,
-        playerTurn: Object.keys(room)[gameDetails.turn],
+        playerTurn: Object.keys(roomStats)[gameDetails.turn],
       });
       if (gameDetails.bulletArr.length === 0) {
         socket.emit("round-over");

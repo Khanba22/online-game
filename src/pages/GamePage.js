@@ -84,7 +84,7 @@ const GamePage = () => {
       if (index === 0) {
         clearInterval(interVal);
         toast.info(
-          `Starting Next Round, Live Bullets : ${live} , Fake Bullets : ${fakes}`
+          `Live Bullets : ${live} , Fake Bullets : ${fakes}`
         );
       }
       index--;

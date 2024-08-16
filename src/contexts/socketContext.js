@@ -39,8 +39,15 @@ export const RoomProvider = ({ children }) => {
   const enterRoom = ({ roomId }) => {
     navigate(`/room/${roomId}`);
   };
-  const removePeer = ({ peerId }) => {
+  const removePeer = ({ peerId, members, username }) => {
     dispatched(removePeerAction(peerId));
+    toast.error(`${username} Left The Game`);
+    dispatch({
+      type: `${setOtherPlayer}`,
+      payload: {
+        data: members,
+      },
+    });
   };
   const getUsers = ({ roomId, memberNames }) => {
     setRoomId(roomId);
@@ -74,37 +81,52 @@ export const RoomProvider = ({ children }) => {
   };
 
   // useEffects
-
   useEffect(() => {
-    const meId = uuidv4();
-    setMyPeerId(meId);
-    const peer = new Peer(meId);
-    setMe(peer);
-    if (!peer) {
-      alert("Peer Connection Failed");
-      return;
-    }
-    try {
-      navigator.mediaDevices
-        .getUserMedia({ audio: true, video: false })
-        .then((stream) => {
-          setStream(stream);
-          dispatched(addPeerAction(meId, stream));
-        });
-    } catch (error) {
-      console.error(error);
-    }
     ws.on("start-game", startGame);
     ws.on("room-created", enterRoom);
     ws.on("get-users", getUsers);
     ws.on("user-disconnected", removePeer);
     ws.on("invalid-room", () => {
       console.error("The Room Code Is Invalid Or The Game has Already Started");
-      toast.error("Invalid Room Code")
+      toast.error("Invalid Room Code");
       navigate("/");
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => {
+      ws.off("start-game", startGame);
+      ws.off("room-created", enterRoom);
+      ws.off("get-users", getUsers);
+      ws.off("user-disconnected", removePeer);
+      ws.off("invalid-room", () => {
+        console.error(
+          "The Room Code Is Invalid Or The Game has Already Started"
+        );
+        toast.error("Invalid Room Code");
+        navigate("/");
+      });
+    };
   }, []);
+
+  useEffect(() => {
+    if (window.location.pathname.includes("/room")) {
+      const meId = uuidv4();
+      setMyPeerId(meId);
+      const peer = new Peer(meId);
+      setMe(peer);
+      if (!peer) {
+        alert("Peer Connection Failed");
+        return;
+      }
+      try {
+        navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+          setStream(stream);
+          dispatched(addPeerAction(meId, stream));
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [window.location.pathname]);
 
   useEffect(() => {
     if (username) {

@@ -33,56 +33,49 @@ const Room = () => {
   }, [me, joined, ws, id, username]);
 
   return (
-    <>
-      {joined ? (
-        <>
-          <AudioControls />
-          <button
-            className="bg-teal-500 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition duration-300"
-            onClick={() => {
-              console.log(playerData);
-            }}
-          >
-            Log My Data
-          </button>
-          {isAdmin && (
+    <div className="h-full w-full min-h-screen bg-black ">
+      <div className="home-screen flex justify-center bg-cover bg-no-repeat">
+        {joined ? (
+          <div className="container backdrop-blur-sm flex flex-col items-center justify-center h-3/4">
+            <AudioControls />
+            {isAdmin && (
+              <button
+                className="bg-teal-500 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition duration-300"
+                onClick={startGame}
+              >
+                Start Game
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="bg-teal-100 p-6 rounded-lg shadow-lg">
+            <label htmlFor="name" className="text-white font-bold mb-2">
+              Name
+            </label>
+            <input
+              type="text"
+              id="name"
+              className="block w-full p-2 mb-4 border border-teal-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+              value={username}
+              onChange={(e) =>
+                dispatch({
+                  type: `${setName}`,
+                  payload: {
+                    username: e.target.value,
+                  },
+                })
+              }
+            />
             <button
               className="bg-teal-500 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition duration-300"
-              onClick={startGame}
+              onClick={() => setJoined(true)}
             >
-              Start Game
+              Join Room
             </button>
-          )}
-        </>
-      ) : (
-        <div className="bg-teal-100 p-6 rounded-lg shadow-lg">
-          <label htmlFor="name" className="text-teal-800 font-bold mb-2">
-            Name
-          </label>
-          <input
-            type="text"
-            id="name"
-            className="block w-full p-2 mb-4 border border-teal-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-            value={username}
-            onChange={(e) =>
-              dispatch({
-                type: `${setName}`,
-                payload: {
-                  username: e.target.value,
-                },
-              })
-            }
-          />
-          <button
-            className="bg-teal-500 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition duration-300"
-            onClick={() => setJoined(true)}
-          >
-            Join Room
-          </button>
-          <button onClick={()=>{console.log(data)}}>LOG MY DATA</button>
-        </div>
-      )}
-    </>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 

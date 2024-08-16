@@ -17,8 +17,8 @@ const Home = () => {
     <div className="h-screen w-screen bg-black">
       <div className="home-screen container justify-center flex items-center">
         <div className=" flex w-2/4 h-1/2 px-10 flex-col justify-evenly">
-          <h1 className="text-slate-50 mb-10 text-center w-full cursor-pointer bg-transparent p-3 text-9xl from-red-700 foldit-bold">
-            Heading
+          <h1 className="text-slate-50 mb-10 text-center w-full cursor-none bg-transparent p-3 text-7xl from-red-700 foldit-bold">
+            The Last Take
           </h1>
           <input
             className=" text-slate-50 my-4 text-center border-none rounded-3xl w-full cursor-pointer bg-transparent border-slate-200 border-y-yellow-200 p-3 text-5xl from-red-700 foldit-semibold"

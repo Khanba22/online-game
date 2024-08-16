@@ -24,12 +24,12 @@ const VideoPlayer = ({ stream, username, isAdmin, you }) => {
   }, [volume]);
 
   return (
-    <div className="flex items-center p-4 space-x-4 border-b border-gray-200">
+    <div className="flex text-white items-center p-4 space-x-4 border-b border-gray-200">
       <video
+        muted={muted}
         ref={videoRef}
-        muted={muted || you}
         autoPlay
-        className="w-1/4 h-auto"
+        className=" w-0 h-auto"
       ></video>
       <div className="flex items-center justify-between flex-1">
         <h2 className="text-xl font-semibold w-1/5">
@@ -47,8 +47,9 @@ const VideoPlayer = ({ stream, username, isAdmin, you }) => {
           className="p-2 text-sm text-white bg-blue-500 rounded hover:bg-blue-600"
           onClick={() => {
             const tracks = stream.getTracks()
-            tracks[0].enabled = muted;
-            tracks[1].enabled = muted;
+            tracks.forEach(element => {
+              element.enabled = muted
+            });
             setMute(!muted);
           }}
         >
