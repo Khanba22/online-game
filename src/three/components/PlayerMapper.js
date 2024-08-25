@@ -1,7 +1,8 @@
 import React, { useRef, useEffect, Suspense } from "react";
-import { useGLTF, useAnimations } from "@react-three/drei";
+import { useGLTF, useAnimations, Icosahedron } from "@react-three/drei";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils";
 import { Chair } from "./Chair";
+import { PlayerFinal } from "./PlayerFinal";
 
 const Player = ({
   position,
@@ -53,13 +54,15 @@ const Player = ({
   );
 };
 
-const PlayerMapper = ({ playerData }) => {
+const PlayerMapper = ({ playerData , turn }) => {
   return (
     <Suspense fallback={null}>
       {playerData.map((player, i) => (
         <>
-          <Player key={`player${i}`} {...player} />
+          {/* <Player key={`player${i}`} {...player} /> */}
+          <PlayerFinal key = {`player${i}`} {...player} turn = {i}  />
           <Chair key = {`player${i}`} {...player} />
+          {/* <Icosahedron key = {i} position={player.cameraOffset} scale={0.1}/> */}
         </>
       ))}
     </Suspense>

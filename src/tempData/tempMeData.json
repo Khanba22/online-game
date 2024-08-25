@@ -13,6 +13,7 @@
   "hasDoubleDamage": false,
   "canLookBullet": false,
   "hasDoubleTurn": false,
-  "position": [-2.59, 0.19, 1.88],
-  "rotation": [0, -0.7, 0]
+  "position": [3.3, -1.11, 0.0],
+  "rotation": [0, 1.5, 0],
+  "cameraOffset": [3.3, 2.1, 0]
 }

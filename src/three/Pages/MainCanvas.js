@@ -10,31 +10,24 @@ import { Map } from "../components/Map";
 import * as THREE from "three";
 import PlayerMapper from "../components/PlayerMapper";
 import LightingMapper from "../components/LightingMapper";
-import playerData from "../../tempData/tempPlayerData.json"
-import data from "../../tempData/tempMeData.json"
+import pdataobj from "../../tempData/tempPlayerData.json";
+import data from "../../tempData/tempMeData.json";
 
 const Scene = ({ turn }) => {
   const { camera } = useThree();
+  // const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 2000);
   // const data = useSelector((state) => state.myPlayerData);
   // const playerData = useSelector((state) => state.otherPlayerData);
+  const playerData = pdataobj["5"];
   const myRef = useRef(null);
   const pointerLockRef = useRef(null);
-  const { position } = data;
+  const { cameraOffset } = data;
   const locked = useRef(false);
   useEffect(() => {
-    camera.lookAt(new THREE.Vector3(0, 1, 0));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    camera.position.set(...cameraOffset);
+    camera.near = 0.01
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // useFrame(() => {
-  //   if (position) {
-  //     // Adjust the camera position based on player data
-  //     camera.position.set(position[0], position[1] + 4, position[2]);
-  //   } else {
-  //     // Default camera position
-  //     // camera.position.set(-1.4, 3, -2);
-  //   }
-  // });
 
   useEffect(() => {
     window.addEventListener("keydown", (e) => {
@@ -47,8 +40,8 @@ const Scene = ({ turn }) => {
 
   return (
     <>
-      <LightingMapper/>
-      <PlayerMapper playerData={Object.values(playerData)} />
+      <LightingMapper />
+      <PlayerMapper turn={turn} playerData={Object.values(playerData)} />
       <Map position={[0, -1.4, 0]} myRef={myRef} />
       <RaycasterComponent
         isLocked={locked}
@@ -56,7 +49,8 @@ const Scene = ({ turn }) => {
         camera={camera}
         playerData={playerData}
       />
-      {/* <PointerLockControls
+      <PointerLockControls
+        maxPolarAngle={(Math.PI / 2) + 0.6}
         ref={pointerLockRef}
         onLock={() => {
           locked.current = true;
@@ -64,8 +58,8 @@ const Scene = ({ turn }) => {
         onUnlock={() => {
           locked.current = false;
         }}
-      /> */}
-      <OrbitControls />
+      />
+      {/* <OrbitControls /> */}
     </>
   );
 };
