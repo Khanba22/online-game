@@ -26,7 +26,7 @@ const App = () => {
         transition={Bounce}
       />
       <Routes>
-        <Route element={<GamePage />} path="/" />
+        <Route element={<Home />} path="/" />
         <Route element={<Room />} path="/room/:id" />
         <Route element={<GamePage />} path="/game/:id" />
       </Routes>

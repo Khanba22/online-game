@@ -13,8 +13,8 @@ import {
 } from "../redux/GameConfig";
 import { toast } from "react-toastify";
 import GameUI from "../three/UI/GameUI";
-import playerData from "../tempData/tempPlayerData.json"
-import data from "../tempData/tempMeData.json"
+import playerData from "../tempData/tempPlayerData.json";
+import data from "../tempData/tempMeData.json";
 
 const GamePage = () => {
   // const { id } = useParams();
@@ -85,9 +85,7 @@ const GamePage = () => {
       }
       if (index === 0) {
         clearInterval(interVal);
-        toast.info(
-          `Live Bullets : ${live} , Fake Bullets : ${fakes}`
-        );
+        toast.info(`Live Bullets : ${live} , Fake Bullets : ${fakes}`);
       }
       index--;
     }, 1000);
@@ -121,7 +119,7 @@ const GamePage = () => {
 
   const usedEquipment = ({ user, equipment }) => {
     if (equipment === "heals") {
-      console.log(playerData[user] , "Equipment Used")
+      console.log(playerData[user], "Equipment Used");
       dispatch({
         type: `${usePlayerEquipment}`,
         payload: {
@@ -129,7 +127,7 @@ const GamePage = () => {
           equipmentType: equipment,
         },
       });
-      console.log()
+      console.log();
     }
     toast.info(`${user} Activated ${equipment}`);
   };
@@ -154,7 +152,7 @@ const GamePage = () => {
     <>
       {/* <SettingsTab show={show} handleShow={handleShow} /> */}
       <GameUI turn={turn} playerTurn={playerTurn} lives={lives} round={0} />
-      <MainCanvas turn={turn} />
+      <MainCanvas turn={turn} playerTurn={playerTurn} />
       {isAdmin && <button onClick={startNextRound}>Start Next Round</button>}
       <button
         className="bg-teal-500 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition duration-300"

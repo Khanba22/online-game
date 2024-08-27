@@ -1,48 +1,61 @@
 import React, { useEffect, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, PointerLockControls } from "@react-three/drei";
+import * as THREE from "three";
 import "./styles.css"; // Import the styles for the crosshair
 import RaycasterComponent from "../components/RayCaster";
 import Crosshair from "../components/Crosshair";
 import { useSelector } from "react-redux";
-
 import { Map } from "../components/Map";
-import * as THREE from "three";
 import PlayerMapper from "../components/PlayerMapper";
 import LightingMapper from "../components/LightingMapper";
-import pdataobj from "../../tempData/tempPlayerData.json";
-import data from "../../tempData/tempMeData.json";
+// import pdataobj from "../../tempData/tempPlayerData.json";
+// import data from "../../tempData/tempMeData.json";
 
-const Scene = ({ turn }) => {
-  const { camera } = useThree();
-  // const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 2000);
-  // const data = useSelector((state) => state.myPlayerData);
-  // const playerData = useSelector((state) => state.otherPlayerData);
-  const playerData = pdataobj["5"];
-  const myRef = useRef(null);
+const Scene = ({ turn , playerTurn }) => {
+  const { camera, scene } = useThree();
   const pointerLockRef = useRef(null);
-  const { cameraOffset } = data;
   const locked = useRef(false);
-  useEffect(() => {
-    camera.position.set(...cameraOffset);
-    camera.near = 0.01
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const axesHelperRef = useRef(null); // Reference for the axes helper
+  const playerData = useSelector(state=>state.otherPlayerData)
+  const data = useSelector(state=>state.myPlayerData)
 
+  // Set up camera and add axes helper
   useEffect(() => {
+    camera.position.set(...data.cameraOffset);
+    camera.near = 0.01;
+    camera.lookAt(new THREE.Vector3(0, 2.1, 0));
+
+    // Add AxesHelper to the scene
+    if (!axesHelperRef.current) {
+      const axesHelper = new THREE.AxesHelper(10); // Adjust size as needed
+      scene.add(axesHelper);
+      axesHelperRef.current = axesHelper;
+    }
+
     window.addEventListener("keydown", (e) => {
-      console.log(e.key);
       if (e.key === "x") {
         pointerLockRef.current.unlock();
       }
     });
-  }, []);
+
+    // Cleanup event listeners
+    return () => {
+      window.removeEventListener("keydown", () => {});
+    };
+  }, [camera, scene]);
 
   return (
     <>
       <LightingMapper />
-      <PlayerMapper turn={turn} playerData={Object.values(playerData)} />
-      <Map position={[0, -1.4, 0]} myRef={myRef} />
+      <PlayerMapper
+        username={data.username}
+        camera={camera}
+        turn={turn}
+        playerTurn = {playerTurn}
+        playerData={Object.values(playerData)}
+      />
+      <Map position={[0, -1.4, 0]} myRef={useRef(null)} />
       <RaycasterComponent
         isLocked={locked}
         turn={turn}
@@ -50,7 +63,7 @@ const Scene = ({ turn }) => {
         playerData={playerData}
       />
       <PointerLockControls
-        maxPolarAngle={(Math.PI / 2) + 0.6}
+        maxPolarAngle={Math.PI / 2 + 0.6}
         ref={pointerLockRef}
         onLock={() => {
           locked.current = true;
@@ -64,7 +77,7 @@ const Scene = ({ turn }) => {
   );
 };
 
-const MainCanvas = ({ turn }) => {
+const MainCanvas = ({ turn , playerTurn }) => {
   return (
     <div className="h-screen w-full">
       <Canvas>
