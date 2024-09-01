@@ -13,43 +13,20 @@ export function PlayerFinal(props) {
   const camera = props.camera || {};
   const userData = props.userData;
 
-  // Store the original position and rotation of the spine node
-  const originalPosition = useRef(new THREE.Vector3());
-  const originalRotation = useRef(new THREE.Euler());
-
-  useEffect(() => {
-    if (nodes.spine) {
-      // Save the initial position and rotation
-      originalPosition.current.copy(nodes.spine.position);
-      originalRotation.current.copy(nodes.spine.rotation);
-    }
-  }, [nodes.spine]);
-
   useFrame(() => {
     if (props.isMyTurn) {
-      if (props.isMe) {
-        camera.attach(nodes['spine']);
-      }
       actions["normal_view"].stop();
       actions["shooting_view"].play();
     } else {
-      if (props.isMe) {
-        camera.clear();
-      }
-
-      // Reset the spine's position and rotation when it's not your turn
-      if (nodes.spine) {
-        nodes.spine.position.copy(originalPosition.current);
-        nodes.spine.rotation.copy(originalRotation.current);
-      }
-
       actions["shooting_view"].stop();
       actions["normal_view"].play();
     }
   });
 
+  const pos = props.position?props.position:[0,0,0]
+
   return (
-    <group ref={group} {...props} scale={1.7} dispose={null}>
+    <group ref={group} {...props} position={[pos[0],pos[1] - 0.35,pos[2]]} scale={1.7} dispose={null}>
       <group userData={userData} name="Scene">
         <group userData={userData} name="metarig">
           <primitive object={nodes.spine} />
