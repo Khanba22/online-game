@@ -7,7 +7,7 @@ const GameConfig = createSlice({
     turn: 0,
     bulletArr: [],
     deadUsers: 0,
-    playerTurn:""
+    playerTurn:"signature1"
   },
   reducers: {
     updateGameTurn: (state, action) => {

@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "react-three-fiber";
-import { Vector3 } from "three";
 
 export function GunHand(props) {
   const gunRef = useRef(null);
@@ -19,10 +18,10 @@ export function GunHand(props) {
       ref={gunRef}
       {...props}
       position={newOffset}
-      scale={1.7}
+      scale={1.4}
       dispose={null}
     >
-      <group frustumCulled={false} position={[0, 0, 0]}>
+      <group frustumCulled={false}>
         <mesh
           frustumCulled={false}
           geometry={nodes.Object_0108.geometry}

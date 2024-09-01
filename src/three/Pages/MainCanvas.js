@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { PointerLockControls } from "@react-three/drei";
+import { OrbitControls, PointerLockControls } from "@react-three/drei";
 import * as THREE from "three";
 import "./styles.css"; // Import the styles for the crosshair
 import RaycasterComponent from "../components/RayCaster";
@@ -63,7 +63,7 @@ const Scene = ({ turn, playerTurn }) => {
         camera={camera}
         playerData={playerData}
       />
-      <PointerLockControls
+      {/* <PointerLockControls
         maxPolarAngle={Math.PI / 2 + 0.6}
         minPolarAngle={Math.PI / 2 - 0.3}
         ref={pointerLockRef}
@@ -73,8 +73,8 @@ const Scene = ({ turn, playerTurn }) => {
         onUnlock={() => {
           locked.current = false;
         }}
-      />
-      {/* <OrbitControls /> */}
+      /> */}
+      <OrbitControls />
     </>
   );
 };
