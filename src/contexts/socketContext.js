@@ -7,7 +7,7 @@ import { peerReducer } from "./peerReducer";
 import { addPeerAction, removePeerAction } from "./peerActions";
 import { useDispatch, useSelector } from "react-redux";
 import { setPlayer } from "../redux/PlayerDataReducer";
-import { setOtherPlayer } from "../redux/AllPlayerReducer";
+import { rotatePlayer, setOtherPlayer } from "../redux/AllPlayerReducer";
 import { setPlayerArray } from "../redux/GameConfig";
 import { toast } from "react-toastify";
 const WS = "http://localhost:8080";
@@ -49,6 +49,15 @@ export const RoomProvider = ({ children }) => {
       },
     });
   };
+  const rotatePlayers = ({ username, rotation }) => {
+    dispatch({
+      type: `${rotatePlayer}`,
+      payload: {
+        username,
+        rotation,
+      },
+    });
+  };
   const getUsers = ({ roomId, memberNames }) => {
     setRoomId(roomId);
     dispatch({
@@ -80,12 +89,12 @@ export const RoomProvider = ({ children }) => {
     navigate(`/game/${roomId}`);
   };
 
-  // useEffects
   useEffect(() => {
     ws.on("start-game", startGame);
     ws.on("room-created", enterRoom);
     ws.on("get-users", getUsers);
     ws.on("user-disconnected", removePeer);
+    ws.on("rotation", rotatePlayers);
     ws.on("invalid-room", () => {
       console.error("The Room Code Is Invalid Or The Game has Already Started");
       toast.error("Invalid Room Code");

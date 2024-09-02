@@ -23,6 +23,17 @@ const OtherPlayerData = createSlice({
     },
   },
   reducers: {
+    rotatePlayer:(state,action)=>{
+      const {username,rotation} = action.payload
+
+      return {
+        ...state,
+        [username]:{
+          ...state[username],
+          rotation:rotation
+        }
+      }
+    },
     setOtherPlayer: (state, action) => {
       return {
         ...action.payload.data,
@@ -91,6 +102,6 @@ const OtherPlayerData = createSlice({
   },
 });
 
-export const { setOtherPlayer, usePlayerEquipment, reduceLife } =
+export const { setOtherPlayer, usePlayerEquipment, reduceLife , rotatePlayer } =
   OtherPlayerData.actions;
 export default OtherPlayerData.reducer;

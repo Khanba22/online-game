@@ -1,6 +1,6 @@
 {
-  "username": "signature2",
-  "color": "blue",
+  "username": "signature1",
+  "color": "red",
   "lives": 5,
   "equipment": {
     "shield": 0,
@@ -13,7 +13,7 @@
   "hasDoubleDamage": false,
   "canLookBullet": false,
   "hasDoubleTurn": false,
-  "position": [0.99, -1.11, 3.24],
-  "rotation": [0, 0.3, 0],
-  "cameraOffset": [0.9, 2.1, 2.95]
+  "position": [3.3, -1.11, 0.0],
+  "rotation": [0, 1.5, 0],
+  "cameraOffset": [3.0, 2.1, -0.02]
 }

@@ -22,9 +22,11 @@ const RaycasterComponent = ({ camera, isLocked }) => {
     bulletArrRef.current = bulletArr;
   }, [bulletArr]);
 
-  useEffect(() => {}, [isLocked]);
 
-  const handleClick = () => {
+  const handleClick = (event) => {
+    if (event.button !== 0) {
+      return;
+    }
     if (!isLocked.current) {
       return;
     }

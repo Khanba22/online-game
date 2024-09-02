@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from "react";
+import React, { useContext, useEffect, useRef } from "react";
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "react-three-fiber";
+import { RoomContext } from "../../contexts/socketContext";
 
 export function GunHand(props) {
   const gunRef = useRef(null);
@@ -8,9 +9,57 @@ export function GunHand(props) {
   const { camera } = props;
   const { cameraOffset } = props;
   const newOffset = [cameraOffset[0], cameraOffset[1] - 0.4, cameraOffset[2]];
+  const { ws } = useContext(RoomContext);
+  const rightMouseDown = useRef(false);
+  const innerGun = useRef(null);
+
+  useEffect(() => {
+    if (!props.isMe) {
+      return;
+    }
+    window.addEventListener("mousedown", (event) => {
+      // Check if the right mouse button is pressed
+      if (event.button === 2) {
+        rightMouseDown.current = true;
+      }
+
+      // Check if the left mouse button is pressed while the right button is held
+      if (event.button === 0 && rightMouseDown.current) {
+        performAction();
+      }
+    });
+
+    window.addEventListener("mouseup", (event) => {
+      // Reset the right mouse button state when it's released
+      if (event.button === 2) {
+        rightMouseDown.current = false;
+      }
+    });
+
+    window.addEventListener("contextmenu", (event) => {
+      // Prevent the context menu from showing up on right-click
+      if (rightMouseDown.current) {
+        event.preventDefault();
+      }
+    });
+
+    function performAction() {
+      console.log("Left click while holding right click detected!");
+      // Your action here
+    }
+  }, []);
 
   useFrame(() => {
-    gunRef.current.rotation.copy(camera.rotation)
+    gunRef.current.rotation.copy(camera.rotation);
+    if (innerGun.current) {
+      if (rightMouseDown.current) {
+        innerGun.current.rotation.set(Math.PI / 2, 0, 0);
+        innerGun.current.position.set(0, -0.3, -0.4);
+      } else {
+        innerGun.current.rotation.set(0, 0, 0);
+        innerGun.current.position.set(0, 0, 0);
+      }
+    }
   });
 
   return (
@@ -21,7 +70,7 @@ export function GunHand(props) {
       scale={1.4}
       dispose={null}
     >
-      <group frustumCulled={false}>
+      <group ref={innerGun} frustumCulled={false}>
         <mesh
           frustumCulled={false}
           geometry={nodes.Object_0108.geometry}

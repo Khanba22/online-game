@@ -7,7 +7,7 @@ const SettingsTab = ({ show, handleShow }) => {
     <>
       <button
         onClick={handleShow}
-        className="btn-primary absolute right-40 top-10 z-20 h-10 aspect-square"
+        className="btn-primary absolute right-40 top-10 z-50 h-10 aspect-square"
       >
         <img src={show ? cross : setting} alt="" />
       </button>

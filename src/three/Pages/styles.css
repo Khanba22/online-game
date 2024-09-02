@@ -12,13 +12,12 @@
     height: 12px;
     transform: translate(-50%, -50%);
     pointer-events: none;
-    /* Ensures the crosshair doesn't interfere with pointer events */
     z-index: 10;
 }
 
 .crosshair-line {
     position: absolute;
-    background-color: rgb(0, 0, 0);
+    background-color: white;
 }
 
 .crosshair-line.vertical {

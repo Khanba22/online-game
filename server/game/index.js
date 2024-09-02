@@ -83,13 +83,16 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
       const shooterDetails = roomStats[shooter];
       const isBulletLive = gameDetails.bulletArr.pop();
       if (!roomStats[victim].isShielded && isBulletLive) {
-        roomStats[victim].lives = Math.max(0,roomStats[victim].lives - damage);
+        roomStats[victim].lives = Math.max(0, roomStats[victim].lives - damage);
         livesTaken = damage;
       }
       if (roomStats[victim].lives === 0) {
-        
+        //Add Death Logic Here Later MF
       }
-      if (!shooterDetails.hasDoubleTurn && !(shooter === victim && !isBulletLive)) {
+      if (
+        !shooterDetails.hasDoubleTurn &&
+        !(shooter === victim && !isBulletLive)
+      ) {
         decideTurn(roomId);
       }
       roomStats[shooter] = {
@@ -158,9 +161,14 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
       .emit("used-equipment", { user: player, equipment: equipmentType });
   };
 
+  const handleRotate = ({ rotation, username, roomId }) => {
+    console.log(username, rotation , roomId);
+  };
+
   socket.on("start-round", startRound);
   socket.on("shoot-player", shootPlayer);
   socket.on("use-equipment", useEquipment);
+  socket.on("rotate", handleRotate);
 };
 
 module.exports = { gameHandler };
