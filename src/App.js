@@ -6,7 +6,7 @@ import "./App.css";
 import GamePage from "./pages/GamePage";
 import { Bounce, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import "./custom-toast.css"
+import "./custom-toast.css";
 
 const App = () => {
   return (
@@ -26,7 +26,7 @@ const App = () => {
         transition={Bounce}
       />
       <Routes>
-        <Route element={<GamePage />} path="/" />
+        <Route element={<Home />} path="/" />
         <Route element={<Room />} path="/room/:id" />
         <Route element={<GamePage />} path="/game/:id" />
       </Routes>

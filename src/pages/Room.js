@@ -5,6 +5,7 @@ import AudioControls from "../components/AudioControls";
 import { useDispatch, useSelector } from "react-redux";
 import { setName, setPlayer } from "../redux/PlayerDataReducer";
 
+
 const Room = () => {
   const dispatch = useDispatch();
   const data = useSelector((state) => state.myPlayerData);
@@ -48,30 +49,33 @@ const Room = () => {
             )}
           </div>
         ) : (
-          <div className="bg-teal-100 p-6 rounded-lg shadow-lg">
-            <label htmlFor="name" className="text-white font-bold mb-2">
-              Name
-            </label>
-            <input
-              type="text"
-              id="name"
-              className="block w-full p-2 mb-4 border border-teal-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-              value={username}
-              onChange={(e) =>
-                dispatch({
-                  type: `${setName}`,
-                  payload: {
-                    username: e.target.value,
-                  },
-                })
-              }
-            />
-            <button
-              className="bg-teal-500 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition duration-300"
-              onClick={() => setJoined(true)}
-            >
-              Join Room
-            </button>
+          <div className="h-screen w-screen flex justify-center items-center">
+            <div className="h-1/2 w-1/2 p-6 rounded-lg flex  items-center flex-col shadow-lg">
+              <label htmlFor="name" className="text-slate-50 mb-10 text-center w-full cursor-none bg-transparent p-3 text-7xl from-red-700 foldit-bold">
+                Enter Your Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                placeholder="Your Name..."
+                className="text-slate-50 text-center border-none my-4 rounded-3xl w-1/2 cursor-pointer bg-transparent border-slate-200 border-y-yellow-200 p-3 text-3xl from-red-700 "
+                value={username}
+                onChange={(e) =>
+                  dispatch({
+                    type: `${setName}`,
+                    payload: {
+                      username: e.target.value,
+                    },
+                  })
+                }
+              />
+              <button
+                className="bg-teal-500 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition duration-300"
+                onClick={() => setJoined(true)}
+              >
+                Join Room
+              </button>
+            </div>
           </div>
         )}
       </div>

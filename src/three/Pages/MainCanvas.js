@@ -9,17 +9,17 @@ import { useSelector } from "react-redux";
 import { Map } from "../components/Map";
 import PlayerMapper from "../components/PlayerMapper";
 import LightingMapper from "../components/LightingMapper";
-import pdataobj from "../../tempData/tempPlayerData.json";
-import data from "../../tempData/tempMeData.json";
+// import pdataobj from "../../tempData/tempPlayerData.json";
+// import data from "../../tempData/tempMeData.json";
 
 const Scene = ({ turn, playerTurn }) => {
   const { camera, scene } = useThree();
   const pointerLockRef = useRef(null);
   const locked = useRef(false);
   const axesHelperRef = useRef(null); // Reference for the axes helper
-  // const playerData = useSelector(state=>state.otherPlayerData)
-  // const data = useSelector(state=>state.myPlayerData)
-  const playerData = pdataobj["5"];
+  const playerData = useSelector(state=>state.otherPlayerData)
+  const data = useSelector(state=>state.myPlayerData)
+  // const playerData = pdataobj["5"];
 
   // Set up camera and add axes helper
   useEffect(() => {
@@ -27,12 +27,7 @@ const Scene = ({ turn, playerTurn }) => {
     camera.near = 0.01;
     camera.lookAt(new THREE.Vector3(0, 2.1, 0));
 
-    // Add AxesHelper to the scene
-    if (!axesHelperRef.current) {
-      const axesHelper = new THREE.AxesHelper(10); // Adjust size as needed
-      scene.add(axesHelper);
-      axesHelperRef.current = axesHelper;
-    }
+    // Add AxesHelper to the scen
 
     window.addEventListener("keydown", (e) => {
       if (e.key === "x") {
@@ -63,7 +58,7 @@ const Scene = ({ turn, playerTurn }) => {
         camera={camera}
         playerData={playerData}
       />
-      {/* <PointerLockControls
+      <PointerLockControls
         maxPolarAngle={Math.PI / 2 + 0.6}
         minPolarAngle={Math.PI / 2 - 0.3}
         ref={pointerLockRef}
@@ -73,13 +68,12 @@ const Scene = ({ turn, playerTurn }) => {
         onUnlock={() => {
           locked.current = false;
         }}
-      /> */}
-      <OrbitControls />
+      />
     </>
   );
 };
 
-const MainCanvas = ({ turn, playerTurn }) => {
+const MainCanvas = ({ turn }) => {
   return (
     <div className="h-screen w-full">
       <Canvas>
