@@ -30,7 +30,7 @@ const OtherPlayerData = createSlice({
         ...state,
         [username]:{
           ...state[username],
-          rotation:rotation
+          neckRotation:rotation
         }
       }
     },

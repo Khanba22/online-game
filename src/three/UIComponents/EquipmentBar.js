@@ -4,10 +4,12 @@ import { RoomContext } from "../../contexts/socketContext";
 import { useEquipment } from "../../redux/PlayerDataReducer";
 import { usePlayerEquipment } from "../../redux/AllPlayerReducer";
 import "./EquipmentBar.css"; // Make sure to create and import the CSS file
+import { toast } from "react-toastify";
 
 const EquipmentBar = () => {
   const { ws, roomId } = useContext(RoomContext);
   const data = useSelector((state) => state.myPlayerData);
+  const { bulletArr } = useSelector((state) => state.gameConfig);
   const { equipment, username } = data;
   const dispatch = useDispatch();
   return (
@@ -20,8 +22,10 @@ const EquipmentBar = () => {
                 className="equipment-button"
                 disabled={equipment[eq] === 0}
                 onClick={() => {
+                  console.log(eq)
                   if (eq === "looker") {
-                    
+                    console.log("Looker Activated")
+                    toast.info(`${bulletArr[bulletArr.length - 1]?"Bullet is Live":"Bullet is Fake"}`);
                   }
                   ws.emit("use-equipment", {
                     roomId,

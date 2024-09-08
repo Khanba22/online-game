@@ -6,11 +6,17 @@ const equipmentList = [
   "doubleTurn",
 ];
 
+const effectMap = {
+  shield: "isShielded",
+  doubleDamage: "hasDoubleDamage",
+  looker: "canLookBullet",
+  heals: "healing",
+  doubleTurn: "hasDoubleTurn",
+};
+
 function createRandomizedArray(n, m) {
-  // Create an array with n true values and m false values
   let arr = new Array(n).fill(true).concat(new Array(m).fill(false));
 
-  // Function to shuffle the array
   function shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -74,6 +80,24 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
     gameDetails.turn = turn;
   };
 
+  const checkGameOver = (roomId) => {
+    const roomStats = roomName[roomId];
+    const players = Object.keys(roomStats);
+    const alivePlayers = players.filter(
+      (player) => roomStats[player].lives > 0
+    );
+
+    if (alivePlayers.length === 1) {
+      // Last player standing - emit game over
+      socket.emit("game-over", { winner: alivePlayers[0], roomId: roomId });
+      socket
+        .to(roomId)
+        .emit("game-over", { winner: alivePlayers[0], roomId: roomId });
+      return true;
+    }
+    return false;
+  };
+
   const shootPlayer = ({ shooter, victim, roomId }) => {
     const gameDetails = roomConfig[roomId];
     try {
@@ -82,19 +106,27 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
       var livesTaken = 0;
       const shooterDetails = roomStats[shooter];
       const isBulletLive = gameDetails.bulletArr.pop();
+
+      // If the bullet is live and the victim is not shielded, apply damage
       if (!roomStats[victim].isShielded && isBulletLive) {
         roomStats[victim].lives = Math.max(0, roomStats[victim].lives - damage);
         livesTaken = damage;
       }
+
+      // Check if the victim is out of lives
       if (roomStats[victim].lives === 0) {
-        //Add Death Logic Here Later MF
+        // Optionally add death logic here
       }
+
+      // If the shooter doesn't have double turn or the shot wasn't on themselves with a fake bullet, switch turns
       if (
         !shooterDetails.hasDoubleTurn &&
         !(shooter === victim && !isBulletLive)
       ) {
         decideTurn(roomId);
       }
+
+      // Reset equipment effects for the shooter and victim
       roomStats[shooter] = {
         ...roomStats[shooter],
         hasDoubleDamage: false,
@@ -102,6 +134,8 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
         canLookBullet: false,
       };
       roomStats[victim] = { ...roomStats[victim], isShielded: false };
+
+      // Emit the shot results
       socket.to(roomId).emit("player-shot", {
         isBulletLive,
         shooter,
@@ -118,6 +152,10 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
         currentTurn: gameDetails.turn,
         playerTurn: Object.keys(roomStats)[gameDetails.turn],
       });
+
+      checkGameOver(roomId);
+
+      // If no more bullets remain in the round, start a new round
       if (gameDetails.bulletArr.length === 0) {
         socket.emit("round-over");
         setTimeout(() => {
@@ -132,24 +170,9 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
   const useEquipment = ({ roomId, player, equipmentType }) => {
     const room = roomName[roomId];
     var effect = "";
-    switch (equipmentType) {
-      case "shield":
-        effect = "isShielded";
-        break;
-      case "doubleDamage":
-        effect = "hasDoubleDamage";
-        break;
-      case "looker":
-        effect = "canLookBullet";
-        break;
-      case "heals":
-        effect = "healing";
-        break;
-      case "doubleTurn":
-        effect = "hasDoubleTurn";
-        break;
-      default:
-        return;
+    effect = effectMap[equipmentType];
+    if (!effect) {
+      return;
     }
     if (effect === "healing") {
       room[player].lives += 1;
@@ -162,7 +185,7 @@ const gameHandler = (socket, rooms, roomName, roomConfig) => {
   };
 
   const handleRotate = ({ rotation, username, roomId }) => {
-    console.log(username, rotation , roomId);
+    socket.to(roomId).emit("rotation", { username, rotation });
   };
 
   socket.on("start-round", startRound);

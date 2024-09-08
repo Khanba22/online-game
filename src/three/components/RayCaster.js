@@ -1,5 +1,5 @@
 import { useFrame, useThree } from "@react-three/fiber";
-import { useContext, useEffect, useRef } from "react";
+import { useContext, useEffect, useRef, useState, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { Raycaster, Vector3 } from "three";
 import { RoomContext } from "../../contexts/socketContext";
@@ -13,71 +13,97 @@ const RaycasterComponent = ({ camera, isLocked }) => {
   const config = useSelector((state) => state.gameConfig);
   const myData = useSelector((state) => state.myPlayerData);
   const { turn, players, bulletArr } = config;
+  
   const turnRef = useRef(turn);
   const intersectedObjectRef = useRef(null);
-
+  const rightMouseDown = useRef(false);
   const bulletArrRef = useRef(bulletArr);
 
+  const [timeBuffer, setTimeBuffer] = useState(false);
+
+  // Update bullet array ref on change
   useEffect(() => {
     bulletArrRef.current = bulletArr;
   }, [bulletArr]);
 
+  const handleClick = useCallback(
+    (myself) => {
+      const currentIntersectedObject = intersectedObjectRef.current;
+      if (!isLocked.current) return;
+      if (timeBuffer) return;
+      setTimeBuffer(true);
+      setTimeout(() => setTimeBuffer(false), 3000);
+      if (!turnRef.current) {
+        toast.warn("Not Your Turn Now");
+        return;
+      }
+      if (!myself && currentIntersectedObject?.userData?.username) {
+        ws.emit("shoot-player", {
+          shooter: myData.username,
+          victim: currentIntersectedObject.userData.username,
+          roomId,
+        });
+      } else {
+        ws.emit("shoot-player", {
+          shooter: myData.username,
+          victim: myData.username,
+          roomId,
+        });
+      }
 
-  const handleClick = (event) => {
-    if (event.button !== 0) {
-      return;
-    }
-    if (!isLocked.current) {
-      return;
-    }
-    const currentIntersectedObject = intersectedObjectRef.current;
-    if (!turnRef.current) {
-      toast.warn("Not Your Turn Now");
-      return;
-    }
-    if (bulletArrRef.current.length === 0) {
-      toast.info("Round Over");
-      setTimeout(() => {
-        toast.info("Starting Next Round");
-      }, 2000);
-      return;
-    }
-    if (currentIntersectedObject?.userData?.username) {
-      ws.emit("shoot-player", {
-        shooter: myData.username,
-        victim: currentIntersectedObject.userData.username,
-        roomId,
-      });
-    }
-  };
+      if (bulletArrRef.current.length === 0) {
+        toast.info("Round Over");
+        setTimeout(() => toast.info("Starting Next Round"), 2000);
+      }
+    },
+    [isLocked, myData.username, roomId, timeBuffer, ws]
+  );
 
   useEffect(() => {
-    window.addEventListener("click", handleClick);
-    return () => {
-      window.removeEventListener("click", handleClick);
+    const onMouseDown = (event) => {
+      if (event.button === 2) rightMouseDown.current = true;
+      if (event.button === 0) handleClick(rightMouseDown.current);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLocked, turn, bulletArr, players, myData.username, roomId, ws]);
+
+    const onMouseUp = (event) => {
+      if (event.button === 2) rightMouseDown.current = false;
+    };
+
+    const onContextMenu = (event) => {
+      if (rightMouseDown.current) event.preventDefault();
+    };
+
+    window.addEventListener("mousedown", onMouseDown);
+    window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener("contextmenu", onContextMenu);
+
+    return () => {
+      window.removeEventListener("mousedown", onMouseDown);
+      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("contextmenu", onContextMenu);
+    };
+  }, [handleClick]);
 
   useFrame(() => {
     camera.getWorldDirection(direction);
     turnRef.current = players.indexOf(myData.username) === turn;
+
     raycaster.current.set(camera.position, direction);
     const intersects = raycaster.current.intersectObjects(scene.children, true);
 
     let foundValidIntersection = false;
-    for (let i = 0; i < intersects.length; i++) {
-      const intersected = intersects[i].object.parent;
+
+    for (const intersect of intersects) {
+      const intersected = intersect.object.parent;
+
       if (intersected.userData && intersected.userData.username) {
         foundValidIntersection = true;
 
         if (intersected !== intersectedObjectRef.current) {
-          if (intersectedObjectRef.current) {
-            if (intersectedObjectRef.current.material) {
-              intersectedObjectRef.current.material.color.set(
-                intersectedObjectRef.current.originalColor
-              );
-            }
+          if (intersectedObjectRef.current?.material) {
+            intersectedObjectRef.current.material.color.set(
+              intersectedObjectRef.current.originalColor
+            );
           }
           if (intersected.material) {
             intersected.originalColor = intersected.material.color.getHex();
@@ -89,12 +115,10 @@ const RaycasterComponent = ({ camera, isLocked }) => {
       }
     }
 
-    if (!foundValidIntersection && intersectedObjectRef.current) {
-      if (intersectedObjectRef.current.material) {
-        intersectedObjectRef.current.material.color.set(
-          intersectedObjectRef.current.originalColor
-        );
-      }
+    if (!foundValidIntersection && intersectedObjectRef.current?.material) {
+      intersectedObjectRef.current.material.color.set(
+        intersectedObjectRef.current.originalColor
+      );
       intersectedObjectRef.current = null;
     }
   });

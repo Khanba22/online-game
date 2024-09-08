@@ -53,7 +53,7 @@ export function GunHand(props) {
     gunRef.current.rotation.copy(camera.rotation);
     if (innerGun.current) {
       if (rightMouseDown.current) {
-        innerGun.current.rotation.set(Math.PI / 2, 0, 0);
+        innerGun.current.rotation.set(Math.PI / 2 + 0.05, 0, 0);
         innerGun.current.position.set(0, -0.3, -0.4);
       } else {
         innerGun.current.rotation.set(0, 0, 0);

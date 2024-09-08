@@ -37,11 +37,7 @@ const Stats = ({ lives, round, turn, otherStats, playerTurn }) => {
         <span>{round}</span>
       </div>
       <div className="stats-item">
-        <span>Turn: </span>
-        <span>{turn}</span>
-      </div>
-      <div className="stats-item">
-        <span>Player: </span>
+        <span>Shooter: </span>
         <span>{playerTurn}</span>
       </div>
       <div className="stats-item">

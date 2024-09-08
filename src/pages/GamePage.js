@@ -127,7 +127,6 @@ const GamePage = () => {
           equipmentType: equipment,
         },
       });
-      console.log();
     }
     toast.info(`${user} Activated ${equipment}`);
   };

@@ -15,7 +15,7 @@ const VideoPlayer = ({ stream, username, isAdmin, you }) => {
     if (videoRef.current) {
       videoRef.current.srcObject = stream;
     }
-  },[stream]);
+  }, [stream]);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -26,7 +26,7 @@ const VideoPlayer = ({ stream, username, isAdmin, you }) => {
   return (
     <div className="flex text-white items-center p-4 space-x-4 border-b border-gray-200">
       <video
-        muted={muted}
+        muted={muted || you}
         ref={videoRef}
         autoPlay
         className=" w-0 h-auto"
@@ -35,20 +35,22 @@ const VideoPlayer = ({ stream, username, isAdmin, you }) => {
         <h2 className="text-xl font-semibold w-1/5">
           {username} {isAdmin && "(Admin)"}
         </h2>
-        <input
-          type="range"
-          value={volume}
-          min={0}
-          max={10}
-          step={1}
-          onChange={handleVolumeChange}
-        />
+        {!you && (
+          <input
+            type="range"
+            value={volume}
+            min={0}
+            max={10}
+            step={1}
+            onChange={handleVolumeChange}
+          />
+        )}
         <button
           className="p-2 text-sm text-white bg-blue-500 rounded hover:bg-blue-600"
           onClick={() => {
-            const tracks = stream.getTracks()
-            tracks.forEach(element => {
-              element.enabled = muted
+            const tracks = stream.getTracks();
+            tracks.forEach((element) => {
+              element.enabled = muted;
             });
             setMute(!muted);
           }}

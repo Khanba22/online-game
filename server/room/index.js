@@ -94,6 +94,7 @@ const defaultConfig = {
     looker: 0,
     doubleTurn: 0,
   },
+  neckRotation:[0,0,0],
   isShielded: false,
   hasDoubleDamage: false,
   canLookBullet: false,

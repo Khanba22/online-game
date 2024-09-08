@@ -9,42 +9,40 @@ import { useSelector } from "react-redux";
 import { Map } from "../components/Map";
 import PlayerMapper from "../components/PlayerMapper";
 import LightingMapper from "../components/LightingMapper";
-import pdataobj from "../../tempData/tempPlayerData.json";
-import data from "../../tempData/tempMeData.json";
-import { Socket } from "socket.io-client";
 import { RoomContext } from "../../contexts/socketContext";
 
 const Scene = ({ turn, playerTurn }) => {
-  const { camera, scene } = useThree();
   const pointerLockRef = useRef(null);
   const locked = useRef(false);
-  const { ws, username , roomId } = useContext(RoomContext);
+  const { camera, scene } = useThree();
+  const { ws, roomId } = useContext(RoomContext);
   const playerData = useSelector((state) => state.otherPlayerData);
-  const data = useSelector((state) => state.myPlayerData);
-  // const playerData = pdataobj["5"];
+  const myData = useSelector((state) => state.myPlayerData);
   const [myRotation, setMyRotation] = useState([0, 0, 0]);
 
   useEffect(() => {
-    camera.position.set(...data.cameraOffset);
+    camera.position.set(...myData.cameraOffset);
     camera.near = 0.01;
     camera.lookAt(new THREE.Vector3(0, 2.1, 0));
 
-    window.addEventListener("keydown", (e) => {
+    const handleKeyDown = (e) => {
       if (e.key === "x") {
         pointerLockRef.current.unlock();
       }
-    });
-
-    // Cleanup event listeners
-    return () => {
-      window.removeEventListener("keydown", () => {});
     };
-  }, [camera, scene, data.cameraOffset]);
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [camera, scene, myData.cameraOffset]);
 
   useFrame(() => {
-    const cr = [camera.rotation.x, camera.rotation.y, camera.rotation.z];
-    if (cr !== myRotation) {
-      ws.emit("rotate", { rotation: cr, username: data.username , roomId: roomId });
+    const cameraRotation = [camera.rotation.x, camera.rotation.y, camera.rotation.z];
+    if (cameraRotation !== myRotation) {
+      ws.emit("rotate", { rotation: cameraRotation, username: myData.username, roomId });
+      setMyRotation(cameraRotation);
     }
   });
 
@@ -52,7 +50,7 @@ const Scene = ({ turn, playerTurn }) => {
     <>
       <LightingMapper />
       <PlayerMapper
-        username={data.username}
+        username={myData.username}
         camera={camera}
         turn={turn}
         playerTurn={playerTurn}
@@ -66,8 +64,8 @@ const Scene = ({ turn, playerTurn }) => {
         playerData={playerData}
       />
       <PointerLockControls
-        maxPolarAngle={Math.PI / 2 + 0.6}
-        minPolarAngle={Math.PI / 2 - 0.3}
+        maxPolarAngle={Math.PI / 2 + 0.2}
+        minPolarAngle={Math.PI / 2  - 0.1}
         ref={pointerLockRef}
         onLock={() => {
           locked.current = true;
@@ -80,12 +78,12 @@ const Scene = ({ turn, playerTurn }) => {
   );
 };
 
-const MainCanvas = ({ turn }) => {
+const MainCanvas = ({ turn, playerTurn }) => {
   return (
     <div className="h-screen w-full">
       <Canvas>
         <color attach={"background"} args={["black"]} />
-        <Scene turn={turn} />
+        <Scene turn={turn} playerTurn={playerTurn} />
       </Canvas>
       <Crosshair />
     </div>

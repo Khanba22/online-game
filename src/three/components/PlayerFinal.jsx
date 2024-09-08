@@ -12,6 +12,7 @@ export function PlayerFinal(props) {
   const { actions } = useAnimations(animations, group);
   const userData = props.userData;
   const { isMe, isMyTurn } = props;
+  const innerRef = useRef(null);
 
   useFrame(() => {
     if (isMyTurn) {
