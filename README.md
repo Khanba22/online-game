@@ -1,7 +1,10 @@
 # Last Take - Online Multiplayer Survival Game
 
-![Gameplay Screenshot 1](https://your-url-here.com/screenshot1.png)
-![Gameplay Screenshot 2](https://your-url-here.com/screenshot2.png)
+![Gameplay Screenshot 1](https://github.com/Khanba22/online-game/blob/main/ScreenShots/Screenshot%20(425).png)
+![Gameplay Screenshot 2](https://github.com/Khanba22/online-game/blob/main/ScreenShots/Screenshot%20(426).png)
+![Gameplay Screenshot 3]([https://github.com/Khanba22/online-game/blob/main/ScreenShots/Screenshot%20(426).png](https://github.com/Khanba22/online-game/blob/main/ScreenShots/Screenshot%20(427).png))
+![Gameplay Screenshot 4](https://github.com/Khanba22/online-game/blob/main/ScreenShots/Screenshot%20(426).png)
+![Gameplay Screenshot 5](https://github.com/Khanba22/online-game/blob/main/ScreenShots/Screenshot%20(426).png)
 
 **Last Take** is an exciting online multiplayer survival game built using modern web technologies like **React.js**, **Three.js**, **Socket.io**, and **Peer.js**. In this game, players face off in a round-table environment, utilizing strategy, manipulation, and luck to survive and outlast their opponents. The game blends elements of suspense, skill, and psychological gameplay to create an intense and thrilling experience.
 
