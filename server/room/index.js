@@ -3,87 +3,86 @@ const { v4 } = require("uuid");
 const colorArr = ["red", "blue", "green", "black", "purple"];
 
 const playerPositionArr = {
-  "1": {
-    "position": [[3.3, -1.11, 0]],
-    "rotation": [[0, 1.5, 0]],
-    "cameraOffset": [[3, 2.1, -0.02]]
+  1: {
+    position: [[3.3, -1.11, 0]],
+    rotation: [[0, 1.5, 0]],
+    cameraOffset: [[3, 2.1, -0.02]],
   },
-  "2": {
-    "position": [
+  2: {
+    position: [
       [3.3, -1.11, 0],
-      [-3.3, -1.11, 0]
+      [-3.3, -1.11, 0],
     ],
-    "rotation": [
+    rotation: [
       [0, 1.5, 0],
-      [0, -1.5, 0]
+      [0, -1.5, 0],
     ],
-    "cameraOffset": [
+    cameraOffset: [
       [2.9, 2.1, -0.02],
-      [-2.9, 2.1, 0]
-    ]
+      [-2.9, 2.1, 0],
+    ],
   },
-  "3": {
-    "position": [
+  3: {
+    position: [
       [3.3, -1.11, 0],
       [-1.5, -1.11, 2.4],
-      [-1, -1.11, -3]
+      [-1, -1.11, -3],
     ],
-    "rotation": [
+    rotation: [
       [0, 1.5, 0],
       [0, -1, 0],
-      [0, 3.6, 0]
+      [0, 3.6, 0],
     ],
-    "cameraOffset": [
+    cameraOffset: [
       [3, 2.1, -0.02],
       [-1.2, 2.1, 2.2],
-      [-0.85, 2.1, -2.7]
-    ]
+      [-0.85, 2.1, -2.7],
+    ],
   },
-  "4": {
-    "position": [
+  4: {
+    position: [
       [3.3, -1.11, 0],
       [0, -1.11, 3.3],
       [-3.3, -1.11, 0],
-      [0, -1.11, -3.3]
+      [0, -1.11, -3.3],
     ],
-    "rotation": [
+    rotation: [
       [0, 1.5, 0],
       [0, 0, 0],
       [0, -1.5, 0],
-      [0, 3.14, 0]
+      [0, 3.14, 0],
     ],
-    "cameraOffset": [
+    cameraOffset: [
       [2.9, 2.1, -0.02],
       [0, 2.1, 2.95],
       [-2.9, 2.1, 0],
-      [0, 2.1, -2.95]
-    ]
+      [0, 2.1, -2.95],
+    ],
   },
-  "5": {
-    "position": [
+  5: {
+    position: [
       [3.3, -1.11, 0],
       [0.99, -1.11, 3.24],
       [-2.9, -1.11, 1.8],
       [1.19, -1.11, -3.18],
-      [-3.04, -1.11, -1.99]
+      [-3.04, -1.11, -1.99],
     ],
-    "rotation": [
+    rotation: [
       [0, 1.5, 0],
       [0, 0.3, 0],
       [0, -1, 0],
       [0, 2.7, 0],
-      [0, -2.2, 0]
+      [0, -2.2, 0],
     ],
-    "cameraOffset": [
+    cameraOffset: [
       [3, 2.1, -0.02],
       [0.9, 2.1, 2.95],
       [-2.6, 2.1, 1.6],
       [1.05, 2.1, -2.9],
-      [-2.75, 2.1, -1.78]
-    ]
-  }
-}
-
+      [-2.75, 2.1, -1.78],
+    ],
+  },
+};
 
 const defaultConfig = {
   lives: 5,
@@ -94,7 +93,7 @@ const defaultConfig = {
     looker: 0,
     doubleTurn: 0,
   },
-  neckRotation:[0,0,0],
+  neckRotation: [0, 0, 0],
   isShielded: false,
   hasDoubleDamage: false,
   canLookBullet: false,
@@ -128,10 +127,13 @@ const roomHandler = (socket, rooms, roomName, roomConfig) => {
           color: colorArr[roomConfig[roomId].memberNo],
           ...defaultConfig,
         };
-        roomName[roomId][username] = config;
-        rooms[roomId].push(peerId);
-        roomConfig[roomId].memberNo += 1;
-
+        if (roomName[roomId][username]) {
+          // Do nothing For Now
+        } else {
+          roomName[roomId][username] = config;
+          rooms[roomId].push(peerId);
+          roomConfig[roomId].memberNo += 1;
+        }
         socket.to(roomId).emit("user-joined", { peerId, username });
         socket.emit("get-users", {
           roomId,
@@ -163,7 +165,7 @@ const roomHandler = (socket, rooms, roomName, roomConfig) => {
           playerPositionArr[memberNo].position[i];
         roomName[roomId][members[i]].rotation =
           playerPositionArr[memberNo].rotation[i];
-          roomName[roomId][members[i]].cameraOffset =
+        roomName[roomId][members[i]].cameraOffset =
           playerPositionArr[memberNo].cameraOffset[i];
       }
 

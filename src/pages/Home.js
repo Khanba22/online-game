@@ -30,7 +30,8 @@ const Home = () => {
             }}
           />
           <button
-            className="w-full outline-none my-4 border-none p-3 text-5xl foldit-semibold"
+            disabled = {roomId.length !== 8}
+            className="w-full outline-none my-4 border-none p-3 text-5xl foldit-semibold disabled:opacity-50"
             onClick={joinRoom}
           >
             Join Room

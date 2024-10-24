@@ -1,11 +1,13 @@
 .custom-toast {
     background-color: transparent !important;
     color: white !important;
-    text-align: left;
+    text-align: right;
     text-wrap: nowrap;
     box-shadow: none !important;
   }
-  
+  .Toastify__toast-icon , .Toastify__close-button{
+    display: none;
+  }
   .Toastify__toast-container--top-left {
     left: 0;
     top: 50%;

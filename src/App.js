@@ -13,16 +13,15 @@ const App = () => {
   return (
     <>
       <ToastContainer
-        position="top-center"
-        autoClose={2000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
+        position="top-right"
+        autoClose = {1000}
+        hideProgressBar={true}
+        newestOnTop={true}
+        closeButton={true}
+        pauseOnHover
         rtl={false}
         pauseOnFocusLoss
-        draggable
         toastClassName={"custom-toast"}
-        pauseOnHover
         theme="colored"
         transition={Bounce}
       />
