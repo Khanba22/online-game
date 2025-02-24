@@ -1,8 +1,7 @@
-import React, { useContext, useEffect, useRef } from "react";
-// import { useParams } from "react-router-dom";
+import React, { useContext, useEffect } from "react";
 import { RoomContext } from "../contexts/socketContext";
 import MainCanvas from "../three/Pages/MainCanvas";
-import EquipmentBar from "../three/UIComponents/EquipmentBar";
+import GameUI from "../three/UI/GameUI";
 import { useDispatch, useSelector } from "react-redux";
 import { addEquipment, reduceMyLife } from "../redux/PlayerDataReducer";
 import { reduceLife, usePlayerEquipment } from "../redux/AllPlayerReducer";
@@ -12,20 +11,24 @@ import {
   updateGameTurn,
 } from "../redux/GameConfig";
 import { toast } from "react-toastify";
-import GameUI from "../three/UI/GameUI";
-import playerData from "../tempData/tempPlayerData.json";
-import data from "../tempData/tempMeData.json";
+// import playerData from "../tempData/tempPlayerData.json";
+// import data from "../tempData/tempMeData.json";
 
 const GamePage = () => {
-  // const { id } = useParams();
   const { ws, roomId, isAdmin } = useContext(RoomContext);
   const dispatch = useDispatch();
-  const gameConfig = useSelector((state) => state.gameConfig);
-  const { turn, playerTurn } = gameConfig;
-  // const data = useSelector((state) => state.myPlayerData);
+  const { turn, playerTurn } = useSelector((state) => state.gameConfig);
+  const playerData = useSelector(state=>state.otherPlayerData)
+  const data = useSelector(state=>state.myPlayerData)
   const { username, lives } = data;
-  // const playerData = useSelector((state) => state.otherPlayerData)
 
+  // Helper function to play sound
+  const playSound = (src) => {
+    const audio = new Audio(src);
+    audio.play();
+  };
+
+  // Handle player being shot
   const shotPlayer = ({
     shooter,
     isBulletLive,
@@ -34,98 +37,86 @@ const GamePage = () => {
     currentTurn,
     playerTurn,
   }) => {
-    const sound = isBulletLive
-      ? "/sounds/gun_shoot.mp3"
-      : "/sounds/fakeBullet.mp3";
-    const audio = new Audio(sound);
-    audio.play();
-    toast.info(`${isBulletLive ? "Bullet Was Live" : "Bullet Was Fake"}`);
-    dispatch({
-      type: `${removeBulletArr}`,
-    });
+    playSound(
+      isBulletLive ? "/sounds/gun_shoot.mp3" : "/sounds/fakeBullet.mp3"
+    );
+    toast.info(isBulletLive ? "Bullet Was Live" : "Bullet Was Fake");
+
+    dispatch({ type: `${removeBulletArr}` });
     dispatch({
       type: `${updateGameTurn}`,
-      payload: {
-        playerTurn: playerTurn,
-        turn: currentTurn,
-      },
+      payload: { playerTurn, turn: currentTurn },
     });
+
     if (victim === username) {
       dispatch({
         type: `${reduceMyLife}`,
-        payload: {
-          liveCount: livesTaken,
-        },
+        payload: { liveCount: livesTaken },
       });
     }
+
     dispatch({
       type: `${reduceLife}`,
-      payload: {
-        user: victim,
-        liveCount: livesTaken,
-      },
+      payload: { user: victim, liveCount: livesTaken },
     });
   };
-  const roundStart = ({
-    bulletArr,
-    equipments,
-    live,
-    fakes,
-    turn,
-    playerTurn,
-  }) => {
-    const audio = new Audio("/sounds/countdown.mp3"); // Create an audio object
-    setTimeout(() => {
-      audio.play();
-    }, 1000);
-    var index = 3;
-    const interVal = setInterval(() => {
-      if (index !== 0) {
-        toast.info(`Round Starting In ${index}`);
+
+  // Countdown function for round start
+  const countdown = async (seconds, live, fakes) => {
+    for (let i = seconds; i >= 0; i--) {
+      if (i > 0) {
+        toast.info(`Round Starting In ${i}`);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      } else {
+        toast.info(`Live Bullets: ${live}, Fake Bullets: ${fakes}`);
       }
-      if (index === 0) {
-        clearInterval(interVal);
-        toast.info(`Live Bullets : ${live} , Fake Bullets : ${fakes}`);
-      }
-      index--;
-    }, 1000);
+    }
+  };
+
+  // Start a new round
+  const roundStart = async (data) => {
+    console.log("Received round-started event with data:", data);
+    
+    const { bulletArr, equipments, live, fakes, turn, playerTurn } = data;
+  
+    if (!equipments) {
+      console.error("Error: Equipments is undefined on client!");
+      return;
+    }
+  
+    playSound("/sounds/countdown.mp3");
+    console.log(equipments);
+    await countdown(3, live, fakes);
+  
     dispatch({
       type: `${updateGameTurn}`,
-      payload: {
-        turn,
-        playerTurn,
-      },
+      payload: { turn, playerTurn },
     });
+  
     dispatch({
       type: `${setBulletArr}`,
-      payload: {
-        bulletArr: bulletArr,
-      },
+      payload: { bulletArr },
     });
+    console.log(`Adding Equipments to ${username}`)
     dispatch({
       type: `${addEquipment}`,
-      payload: {
-        equipment: equipments[username],
-      },
+      payload: { equipment: equipments[username] },
     });
   };
+  
 
+  // Handle round over
   const roundOver = () => {
     toast.info("Round Over");
-    setTimeout(() => {
-      toast.info("Starting Next Round");
-    }, 1000);
+    setTimeout(() => toast.info("Starting Next Round"), 1000);
   };
 
+  // Handle equipment usage
   const usedEquipment = ({ user, equipment }) => {
     if (equipment === "heals") {
-      console.log(playerData[user], "Equipment Used");
       dispatch({
         type: `${usePlayerEquipment}`,
-        payload: {
-          user: user,
-          equipmentType: equipment,
-        },
+        payload: { user, equipmentType: equipment },
       });
     }
     toast.info(`${user} Activated ${equipment}`);
@@ -136,11 +127,14 @@ const GamePage = () => {
     ws.on("round-started", roundStart);
     ws.on("round-over", roundOver);
     ws.on("used-equipment", usedEquipment);
+
     return () => {
-      ws.off("round-started", roundStart);
       ws.off("player-shot", shotPlayer);
+      ws.off("round-started", roundStart);
+      ws.off("round-over", roundOver);
+      ws.off("used-equipment", usedEquipment);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const startNextRound = () => {
@@ -149,19 +143,23 @@ const GamePage = () => {
 
   return (
     <>
-      {/* <SettingsTab show={show} handleShow={handleShow} /> */}
       <GameUI turn={turn} playerTurn={playerTurn} lives={lives} round={0} />
       <MainCanvas turn={turn} playerTurn={playerTurn} />
-      {isAdmin && <button onClick={startNextRound}>Start Next Round</button>}
+      {isAdmin && (
+        <button
+          className="bg-teal-500 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition duration-300"
+          onClick={startNextRound}
+        >
+          Start Next Round
+        </button>
+      )}
       <button
-        className="bg-teal-500 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition duration-300"
-        onClick={() => {
-          console.log(playerData);
-        }}
+        className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300"
+        onClick={() => console.log(playerData)}
       >
         Log My Data
       </button>
-      <h1>Current Turn {turn}</h1>
+      <h1>Current Turn: {turn}</h1>
     </>
   );
 };

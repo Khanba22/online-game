@@ -1,88 +1,7 @@
 const { v4 } = require("uuid");
 
 const colorArr = ["red", "blue", "green", "black", "purple"];
-
-const playerPositionArr = {
-  1: {
-    position: [[3.3, -1.11, 0]],
-    rotation: [[0, 1.5, 0]],
-    cameraOffset: [[3, 2.1, -0.02]],
-  },
-  2: {
-    position: [
-      [3.3, -1.11, 0],
-      [-3.3, -1.11, 0],
-    ],
-    rotation: [
-      [0, 1.5, 0],
-      [0, -1.5, 0],
-    ],
-    cameraOffset: [
-      [2.9, 2.1, -0.02],
-      [-2.9, 2.1, 0],
-    ],
-  },
-  3: {
-    position: [
-      [3.3, -1.11, 0],
-      [-1.5, -1.11, 2.4],
-      [-1, -1.11, -3],
-    ],
-    rotation: [
-      [0, 1.5, 0],
-      [0, -1, 0],
-      [0, 3.6, 0],
-    ],
-    cameraOffset: [
-      [3, 2.1, -0.02],
-      [-1.2, 2.1, 2.2],
-      [-0.85, 2.1, -2.7],
-    ],
-  },
-  4: {
-    position: [
-      [3.3, -1.11, 0],
-      [0, -1.11, 3.3],
-      [-3.3, -1.11, 0],
-      [0, -1.11, -3.3],
-    ],
-    rotation: [
-      [0, 1.5, 0],
-      [0, 0, 0],
-      [0, -1.5, 0],
-      [0, 3.14, 0],
-    ],
-    cameraOffset: [
-      [2.9, 2.1, -0.02],
-      [0, 2.1, 2.95],
-      [-2.9, 2.1, 0],
-      [0, 2.1, -2.95],
-    ],
-  },
-  5: {
-    position: [
-      [3.3, -1.11, 0],
-      [0.99, -1.11, 3.24],
-      [-2.9, -1.11, 1.8],
-      [1.19, -1.11, -3.18],
-      [-3.04, -1.11, -1.99],
-    ],
-    rotation: [
-      [0, 1.5, 0],
-      [0, 0.3, 0],
-      [0, -1, 0],
-      [0, 2.7, 0],
-      [0, -2.2, 0],
-    ],
-    cameraOffset: [
-      [3, 2.1, -0.02],
-      [0.9, 2.1, 2.95],
-      [-2.6, 2.1, 1.6],
-      [1.05, 2.1, -2.9],
-      [-2.75, 2.1, -1.78],
-    ],
-  },
-};
+const playerPositionArr = require("../data/positionConfig.json");
 
 const defaultConfig = {
   lives: 5,
@@ -100,117 +19,119 @@ const defaultConfig = {
   hasDoubleTurn: false,
 };
 
-const disconnected = {};
+const disconnected = {}; // Store disconnected user data
+
+const createRoom = (socket, rooms, roomName, roomConfig) => {
+  const roomId = v4().split("-")[0];
+  rooms[roomId] = [];
+  roomName[roomId] = {};
+  roomConfig[roomId] = {
+    turn: 0,
+    rounds: 3,
+    memberNo: 0,
+    hasStarted: false,
+  };
+
+  socket.join(roomId);
+  socket.emit("room-created", { roomId });
+};
+
+const joinRoom = (socket, rooms, roomName, roomConfig) => async ({ roomId, peerId, username }) => {
+  if (!rooms[roomId]) {
+    socket.emit("invalid-room", { roomId });
+    return;
+  }
+
+  socket.join(roomId);
+  
+  // Check if user is reconnecting
+  if (disconnected[roomId]?.[username]) {
+    roomName[roomId][username] = disconnected[roomId][username];
+    delete disconnected[roomId][username];
+    console.log(`${username} reconnected in room ${roomId}`);
+  } else if (!roomName[roomId][username]) {
+    // New user joining the game
+    roomName[roomId][username] = {
+      username,
+      color: colorArr[roomConfig[roomId].memberNo],
+      ...defaultConfig,
+    };
+    rooms[roomId].push(peerId);
+    roomConfig[roomId].memberNo += 1;
+  }
+
+  socket.to(roomId).emit("user-joined", { peerId, username });
+  broadcastUsers(socket, roomId, rooms, roomName);
+};
+
+const startGame = (socket, rooms, roomName, roomConfig) => ({ roomId }) => {
+  if (!roomName[roomId]) return;
+
+  const members = Object.keys(roomName[roomId]);
+  const { memberNo } = roomConfig[roomId];
+
+  for (let i = 0; i < memberNo; i++) {
+    if (playerPositionArr[memberNo]) {
+      roomName[roomId][members[i]].position = playerPositionArr[memberNo].position[i];
+      roomName[roomId][members[i]].rotation = playerPositionArr[memberNo].rotation[i];
+      roomName[roomId][members[i]].cameraOffset = playerPositionArr[memberNo].cameraOffset[i];
+    }
+  }
+
+  broadcastUsers(socket, roomId, rooms, roomName);
+  roomConfig[roomId].hasStarted = true;
+  socket.to(roomId).emit("start-game", { roomId });
+  socket.emit("start-game", { roomId });
+};
+
+const handleDisconnect = (socket, rooms, roomName, roomConfig) => (roomId, peerId, username) => {
+  if (!rooms[roomId]) return;
+
+  rooms[roomId] = rooms[roomId].filter((id) => id !== peerId);
+  socket.leave(roomId);
+
+  if (!disconnected[roomId]) {
+    disconnected[roomId] = {};
+  }
+  disconnected[roomId][username] = roomName[roomId][username];
+
+  delete roomName[roomId][username];
+
+  console.log(`User ${username} disconnected from room ${roomId}`);
+
+  socket.to(roomId).emit("user-disconnected", {
+    peerId,
+    members: roomName[roomId],
+    username,
+  });
+};
+
+const broadcastUsers = (socket, roomId, rooms, roomName) => {
+  const participants = rooms[roomId] || [];
+  const memberNames = roomName[roomId] || {};
+
+  socket.to(roomId).emit("get-users", { roomId, participants, memberNames });
+  socket.emit("get-users", { roomId, participants, memberNames });
+};
 
 const roomHandler = (socket, rooms, roomName, roomConfig) => {
-  const createRoom = () => {
-    const roomId = v4().split("-")[0];
-    rooms[roomId] = [];
-    roomName[roomId] = {};
-    roomConfig[roomId] = {
-      turn: 0,
-      rounds: 3,
-      memberNo: 0,
-      hasStarted: false,
-    };
+  socket.on("create-room", () => createRoom(socket, rooms, roomName, roomConfig));
+  socket.on("join-room", joinRoom(socket, rooms, roomName, roomConfig));
+  socket.on("start-request", startGame(socket, rooms, roomName, roomConfig));
 
-    socket.join(roomId);
-    socket.emit("room-created", { roomId });
-  };
+  socket.on("disconnecting", () => {
+    const [roomId] = Array.from(socket.rooms).filter((id) => id !== socket.id);
+    if (roomId) {
+      const peerId = rooms[roomId]?.find((id) => id === socket.id);
+      const username = Object.keys(roomName[roomId] || {}).find(
+        (name) => roomName[roomId][name]?.peerId === peerId
+      );
 
-  const joinRoom = async ({ roomId, peerId, username }) => {
-    if (rooms[roomId] && !roomConfig[roomId].hasStarted) {
-      socket.join(roomId);
-      if (!rooms[roomId].includes(peerId)) {
-        const config = {
-          username,
-          color: colorArr[roomConfig[roomId].memberNo],
-          ...defaultConfig,
-        };
-        if (roomName[roomId][username]) {
-          // Do nothing For Now
-        } else {
-          roomName[roomId][username] = config;
-          rooms[roomId].push(peerId);
-          roomConfig[roomId].memberNo += 1;
-        }
-        socket.to(roomId).emit("user-joined", { peerId, username });
-        socket.emit("get-users", {
-          roomId,
-          participants: rooms[roomId],
-          memberNames: roomName[roomId],
-        });
-        socket.to(roomId).emit("get-users", {
-          roomId,
-          participants: rooms[roomId],
-          memberNames: roomName[roomId],
-        });
+      if (username) {
+        handleDisconnect(socket, rooms, roomName, roomConfig)(roomId, peerId, username);
       }
-    } else if (rooms[roomId] && roomConfig[roomId].hasStarted) {
-      console.log("Game has Already Started");
-      console.log(disconnected[roomId]);
-      if (disconnected[roomId]?.[username]) {
-        console.log("Disconnected User Trying To Reconnect");
-      }
-    } else {
-      socket.emit("invalid-room", { roomId });
     }
-
-    socket.on("start-request", ({ roomId }) => {
-      console.log(roomName[roomId]);
-      const members = Object.keys(roomName[roomId]);
-      const { memberNo } = roomConfig[roomId];
-      for (let i = 0; i < memberNo; i++) {
-        roomName[roomId][members[i]].position =
-          playerPositionArr[memberNo].position[i];
-        roomName[roomId][members[i]].rotation =
-          playerPositionArr[memberNo].rotation[i];
-        roomName[roomId][members[i]].cameraOffset =
-          playerPositionArr[memberNo].cameraOffset[i];
-      }
-
-      socket.to(roomId).emit("get-users", {
-        roomId,
-        participants: rooms[roomId],
-        memberNames: roomName[roomId],
-      });
-      socket.emit("get-users", {
-        roomId,
-        participants: rooms[roomId],
-        memberNames: roomName[roomId],
-      });
-
-      roomConfig[roomId].hasStarted = true;
-      socket.to(roomId).emit("start-game", { roomId });
-      socket.emit("start-game", { roomId });
-    });
-
-    socket.on("disconnect", () => {
-      try {
-        rooms[roomId] = rooms[roomId].filter((id) => id !== peerId);
-        if (disconnected[roomId]) {
-          disconnected[roomId] = {
-            ...disconnected[roomId],
-            username: roomName[roomId][username],
-          };
-        } else {
-          disconnected[roomId] = { [username]: roomName[roomId][username] };
-        }
-        delete roomName[roomId][username];
-        console.log("User Disconnected:", roomName[roomId]);
-        socket.to(roomId).emit("user-disconnected", {
-          peerId,
-          members: roomName[roomId],
-          username,
-        });
-      } catch (error) {
-        console.error(error);
-      }
-    });
-  };
-
-  socket.on("create-room", createRoom);
-  socket.on("join-room", joinRoom);
+  });
 };
 
 module.exports = { roomHandler };
