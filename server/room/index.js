@@ -36,75 +36,87 @@ const createRoom = (socket, rooms, roomName, roomConfig) => {
   socket.emit("room-created", { roomId });
 };
 
-const joinRoom = (socket, rooms, roomName, roomConfig) => async ({ roomId, peerId, username }) => {
-  if (!rooms[roomId]) {
-    socket.emit("invalid-room", { roomId });
-    return;
-  }
+const joinRoom =
+  (socket, rooms, roomName, roomConfig) =>
+  async ({ roomId, peerId, username }) => {
+    try {
+      if (!rooms[roomId]) {
+        socket.emit("invalid-room", { roomId });
+        return;
+      }
 
-  socket.join(roomId);
-  
-  // Check if user is reconnecting
-  if (disconnected[roomId]?.[username]) {
-    roomName[roomId][username] = disconnected[roomId][username];
-    delete disconnected[roomId][username];
-    console.log(`${username} reconnected in room ${roomId}`);
-  } else if (!roomName[roomId][username]) {
-    // New user joining the game
-    roomName[roomId][username] = {
-      username,
-      color: colorArr[roomConfig[roomId].memberNo],
-      ...defaultConfig,
-    };
-    rooms[roomId].push(peerId);
-    roomConfig[roomId].memberNo += 1;
-  }
-
-  socket.to(roomId).emit("user-joined", { peerId, username });
-  broadcastUsers(socket, roomId, rooms, roomName);
-};
-
-const startGame = (socket, rooms, roomName, roomConfig) => ({ roomId }) => {
-  if (!roomName[roomId]) return;
-
-  const members = Object.keys(roomName[roomId]);
-  const { memberNo } = roomConfig[roomId];
-
-  for (let i = 0; i < memberNo; i++) {
-    if (playerPositionArr[memberNo]) {
-      roomName[roomId][members[i]].position = playerPositionArr[memberNo].position[i];
-      roomName[roomId][members[i]].rotation = playerPositionArr[memberNo].rotation[i];
-      roomName[roomId][members[i]].cameraOffset = playerPositionArr[memberNo].cameraOffset[i];
+      // Check if user is reconnecting
+      if (disconnected[roomId]?.[username]) {
+        throw new Error("Unable To Rejoin");
+        // roomName[roomId][username] = disconnected[roomId][username];
+        // delete disconnected[roomId][username];
+        // console.log(`${username} reconnected in room ${roomId}`);
+      } else if (!roomName[roomId][username]) {
+        // New user joining the game
+        roomName[roomId][username] = {
+          username,
+          color: colorArr[roomConfig[roomId].memberNo],
+          ...defaultConfig,
+        };
+        rooms[roomId].push(peerId);
+        roomConfig[roomId].memberNo += 1;
+      }
+      socket.join(roomId);
+      socket.to(roomId).emit("user-joined", { peerId, username });
+      broadcastUsers(socket, roomId, rooms, roomName);
+    } catch (error) {
+      console.log(error);
+      socket.emit("error",error.message);
     }
-  }
+  };
 
-  broadcastUsers(socket, roomId, rooms, roomName);
-  roomConfig[roomId].hasStarted = true;
-  socket.to(roomId).emit("start-game", { roomId });
-  socket.emit("start-game", { roomId });
-};
+const startGame =
+  (socket, rooms, roomName, roomConfig) =>
+  ({ roomId }) => {
+    if (!roomName[roomId]) return;
 
-const handleDisconnect = (socket, rooms, roomName, roomConfig) => (roomId, peerId, username) => {
-  if (!rooms[roomId]) return;
+    const members = Object.keys(roomName[roomId]);
+    const { memberNo } = roomConfig[roomId];
 
-  rooms[roomId] = rooms[roomId].filter((id) => id !== peerId);
-  socket.leave(roomId);
+    for (let i = 0; i < memberNo; i++) {
+      if (playerPositionArr[memberNo]) {
+        roomName[roomId][members[i]].position =
+          playerPositionArr[memberNo].position[i];
+        roomName[roomId][members[i]].rotation =
+          playerPositionArr[memberNo].rotation[i];
+        roomName[roomId][members[i]].cameraOffset =
+          playerPositionArr[memberNo].cameraOffset[i];
+      }
+    }
 
-  if (!disconnected[roomId]) {
-    disconnected[roomId] = {};
-  }
-  disconnected[roomId][username] = roomName[roomId][username];
+    broadcastUsers(socket, roomId, rooms, roomName);
+    roomConfig[roomId].hasStarted = true;
+    socket.to(roomId).emit("start-game", { roomId });
+    socket.emit("start-game", { roomId });
+  };
 
-  delete roomName[roomId][username];
+const handleDisconnect =
+  (socket, rooms, roomName, roomConfig) => (roomId, peerId, username) => {
+    if (!rooms[roomId]) return;
 
-  console.log(`User ${username} disconnected from room ${roomId}`);
+    rooms[roomId] = rooms[roomId].filter((id) => id !== peerId);
+    socket.leave(roomId);
 
-  socket.to(roomId).emit("user-disconnected", {
-    peerId,
-    members: roomName[roomId],
-    username,
-  });
-};
+    if (!disconnected[roomId]) {
+      disconnected[roomId] = {};
+    }
+    disconnected[roomId][username] = roomName[roomId][username];
+
+    delete roomName[roomId][username];
+
+    console.log(`User ${username} disconnected from room ${roomId}`);
+
+    socket.to(roomId).emit("user-disconnected", {
+      peerId,
+      members: roomName[roomId],
+      username,
+    });
+  };
 
 const broadcastUsers = (socket, roomId, rooms, roomName) => {
   const participants = rooms[roomId] || [];
@@ -115,7 +127,9 @@ const broadcastUsers = (socket, roomId, rooms, roomName) => {
 };
 
 const roomHandler = (socket, rooms, roomName, roomConfig) => {
-  socket.on("create-room", () => createRoom(socket, rooms, roomName, roomConfig));
+  socket.on("create-room", () =>
+    createRoom(socket, rooms, roomName, roomConfig)
+  );
   socket.on("join-room", joinRoom(socket, rooms, roomName, roomConfig));
   socket.on("start-request", startGame(socket, rooms, roomName, roomConfig));
 
@@ -128,7 +142,12 @@ const roomHandler = (socket, rooms, roomName, roomConfig) => {
       );
 
       if (username) {
-        handleDisconnect(socket, rooms, roomName, roomConfig)(roomId, peerId, username);
+        handleDisconnect(
+          socket,
+          rooms,
+          roomName,
+          roomConfig
+        )(roomId, peerId, username);
       }
     }
   });

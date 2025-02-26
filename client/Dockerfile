@@ -1,26 +1,20 @@
-# Use a Node.js image to build the React app
-FROM node:20 AS build
+# Use Node.js as base image
+FROM node:20
 
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy package.json and install dependencies
+# Copy package.json and package-lock.json first to leverage Docker cache
 COPY package.json package-lock.json ./
+
+# Install dependencies
 RUN npm install
 
-# Copy the source code
+# Copy the rest of the application files
 COPY . .
 
-# Build the React app
-RUN npm run build
-
-# Use a lightweight web server for production
-FROM nginx:1.23
-
-# Copy the built React files to Nginx
-COPY --from=build /app/build /usr/share/nginx/html
-
-# Expose the port Nginx runs on
+# Expose the port React runs on
 EXPOSE 3000
 
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start the React app using npm start
+CMD ["npm", "start"]
