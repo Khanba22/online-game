@@ -1,6 +1,6 @@
 "use client";
 
-import { Circle, GuitarIcon } from "lucide-react";
+import { Circle } from "lucide-react";
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
