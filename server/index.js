@@ -3,12 +3,13 @@ const app = express();
 const http = require("http");
 const { Server } = require("socket.io");
 const port = 8080;
+require("dotenv").config();
 const cors = require("cors");
 const { roomHandler } = require("./room/index");
 const { gameHandler } = require("./game");
 
 const server = http.createServer(app);
-app.use(cors);
+app.use(cors());
 const rooms = {};
 const roomName = {};
 const roomConfig = {};
@@ -20,7 +21,7 @@ const io = new Server(server, {
 });
 
 app.get("/", (req, res) => {
-  res.send(`The Server is Active on ${process.env.HOST}`);
+  res.send(`The Server is Active !`);
 });
 
 io.on("connection", (socket) => {
@@ -32,3 +33,7 @@ io.on("connection", (socket) => {
 server.listen(8080, "0.0.0.0", () =>
   console.log("Server running on port 8080")
 );
+
+server.on("error", (err) => {
+  console.error("Server Error:", err);
+});
