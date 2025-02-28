@@ -1,7 +1,6 @@
-import React, { useContext, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "react-three-fiber";
-import { RoomContext } from "../../contexts/socketContext";
 
 export function GunHand(props) {
   const gunRef = useRef(null);
@@ -9,7 +8,6 @@ export function GunHand(props) {
   const { camera } = props;
   const { cameraOffset } = props;
   const newOffset = [cameraOffset[0], cameraOffset[1] - 0.4, cameraOffset[2]];
-  const { ws } = useContext(RoomContext);
   const rightMouseDown = useRef(false);
   const innerGun = useRef(null);
 

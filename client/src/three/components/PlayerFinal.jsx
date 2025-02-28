@@ -1,8 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef } from "react";
 import { useFrame, useGraph } from "@react-three/fiber";
-import { useGLTF, useAnimations, Icosahedron } from "@react-three/drei";
+import { useGLTF, useAnimations } from "@react-three/drei";
 import { SkeletonUtils } from "three-stdlib";
-import * as THREE from "three";
 
 export function PlayerFinal(props) {
   const group = useRef();
@@ -11,8 +10,7 @@ export function PlayerFinal(props) {
   const { nodes, materials } = useGraph(clone);
   const { actions } = useAnimations(animations, group);
   const userData = props.userData;
-  const { isMe, isMyTurn } = props;
-  const innerRef = useRef(null);
+  const { isMyTurn } = props;
 
   useFrame(() => {
     if (isMyTurn) {

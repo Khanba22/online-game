@@ -1,15 +1,12 @@
-import React, { Suspense, useContext } from "react";
+import React, { Suspense } from "react";
 import { Chair } from "./Chair";
 import { PlayerFinal } from "./PlayerFinal";
-import { useDispatch, useSelector } from "react-redux";
+import {  useSelector } from "react-redux";
 import { GunHand } from "./GunHand";
 import { Text, Billboard } from "@react-three/drei"; // Import Text and Billboard components
-import { RoomContext } from "../../contexts/socketContext";
 
 const PlayerMapper = ({ playerData, turn, camera, username }) => {
   const { playerTurn } = useSelector((state) => state.gameConfig);
-  const { ws } = useContext(RoomContext);
-  const dispatch = useDispatch();
 
   return (
     <Suspense fallback={null}>
