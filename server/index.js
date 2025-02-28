@@ -20,6 +20,10 @@ const io = new Server(server, {
 });
 
 
+app.get("/",(req,res)=>{
+  res.send(`The Server is Active on ${process.env.HOST}`)
+})
+
 io.on("connection", (socket) => {
   roomHandler(socket,rooms,roomName,roomConfig);
   gameHandler(socket,rooms,roomName,roomConfig);
