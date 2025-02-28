@@ -10,9 +10,10 @@ import { setPlayer } from "../redux/PlayerDataReducer";
 import { rotatePlayer, setOtherPlayer } from "../redux/AllPlayerReducer";
 import { setPlayerArray } from "../redux/GameConfig";
 import { toast } from "react-toastify";
-const WS = "http://localhost:8080";
+const WS = process.env.REACT_APP_BACKEND_HOST_URL;
 
 export const RoomContext = createContext(null);
+console.log(WS)
 const ws = socketIoClient(WS);
 export const RoomProvider = ({ children }) => {
   const navigate = useNavigate();
