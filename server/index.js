@@ -15,22 +15,20 @@ const roomConfig = {};
 const io = new Server(server, {
   cors: {
     origin: "*",
-    methods: ["GET", "POST"]
-  }
+    methods: ["GET", "POST"],
+  },
 });
 
-
-app.get("/",(req,res)=>{
-  res.send(`The Server is Active on ${process.env.HOST}`)
-})
+app.get("/", (req, res) => {
+  res.send(`The Server is Active on ${process.env.HOST}`);
+});
 
 io.on("connection", (socket) => {
-  roomHandler(socket,rooms,roomName,roomConfig);
-  gameHandler(socket,rooms,roomName,roomConfig);
-  socket.on("disconnect", () => {
-  });
+  roomHandler(socket, rooms, roomName, roomConfig);
+  gameHandler(socket, rooms, roomName, roomConfig);
+  socket.on("disconnect", () => {});
 });
 
-server.listen(port, () => {
-  console.log(`Server Active on port ${port}`);
-});
+server.listen(8080, "0.0.0.0", () =>
+  console.log("Server running on port 8080")
+);
