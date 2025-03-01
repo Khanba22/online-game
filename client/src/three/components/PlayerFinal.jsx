@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { useFrame, useGraph } from "@react-three/fiber";
 import { useGLTF, useAnimations } from "@react-three/drei";
 import { SkeletonUtils } from "three-stdlib";
@@ -11,8 +11,10 @@ export function PlayerFinal(props) {
   const { actions } = useAnimations(animations, group);
   const userData = props.userData;
   const { isMyTurn } = props;
+  const [visible, setVisible] = useState(true);
 
   useFrame(() => {
+    console.log();
     if (isMyTurn) {
       actions["normal_view"].stop();
       actions["shooting_view"].play();
@@ -20,6 +22,9 @@ export function PlayerFinal(props) {
       actions["shooting_view"].stop();
       actions["normal_view"].play();
     }
+    if (userData.lives === 0 && visible){
+      setVisible(false);
+    };
   });
 
   const pos = props.position ? props.position : [0, 0, 0];
@@ -33,7 +38,7 @@ export function PlayerFinal(props) {
       dispose={null}
     >
       <group userData={userData} name="Scene">
-        <group userData={userData} name="metarig">
+        <group userData={userData} visible={visible} name="metarig">
           <primitive object={nodes.spine} />
           <group userData={userData} name="Object_2018">
             <skinnedMesh
