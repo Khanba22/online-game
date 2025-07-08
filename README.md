@@ -42,3 +42,11 @@ The primary goal in **Last Take** is to survive longer than your opponents. Play
    ```bash
    git clone https://github.com/username/last-take.git
    cd last-take
+
+
+
+## Deployment
+
+Make sure that two ports 3000 and 4000 are exposed:
+   ```bash
+   REACT_APP_BACKEND_HOST_URL=your-hosted-url docker-compose up --build
