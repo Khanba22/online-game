@@ -1,22 +1,12 @@
-version: "3.8"
+version: "3"
 
 services:
-  client:
-    build: ./client
+  app:
+    build: .
     ports:
-      - "3000:3000"
-    depends_on:
-      - server
-    networks:
-      - app_network
-
-  server:
-    build: ./server
-    ports:
-      - "8080:8080"
-    networks:
-      - app_network
-
-networks:
-  app_network:
-    driver: bridge
+      - "3000:3000" # React app
+      - "4000:4000" # Node backend
+    volumes:
+      - .:/app
+    environment:
+      - NODE_ENV=development

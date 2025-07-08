@@ -1,0 +1,30 @@
+# Use Node.js base image
+FROM node:20
+
+# Set the working directory
+WORKDIR /app
+
+# Copy root files including package.json if needed
+COPY package.json package-lock.json ./
+
+# Install root dependencies (we'll handle both client & server deps separately if needed)
+RUN npm install
+
+# Copy backend and frontend separately
+COPY client ./client
+COPY server ./server
+
+# Install frontend dependencies
+RUN cd client && npm install
+
+# Install backend dependencies
+RUN cd server && npm install
+
+# Install concurrently globally (to run both server and client)
+RUN npm install -g concurrently
+
+# Expose both ports (React & API)
+EXPOSE 3000 4000
+
+# Default command: run both server and client
+CMD concurrently "npm start --prefix client" "node server/index.js"

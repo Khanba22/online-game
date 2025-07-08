@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const http = require("http");
 const { Server } = require("socket.io");
-const port = 8080;
+const port = 4000;
 require("dotenv").config();
 const cors = require("cors");
 const { roomHandler } = require("./room/index");
@@ -30,8 +30,8 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {});
 });
 
-server.listen(8080, "0.0.0.0", () =>
-  console.log("Server running on port 8080")
+server.listen(4000, "0.0.0.0", () =>
+  console.log("Server running on port 4000")
 );
 
 server.on("error", (err) => {
