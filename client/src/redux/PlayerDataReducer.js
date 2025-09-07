@@ -111,9 +111,13 @@ const myPlayerData = createSlice({
       };
     },
     reduceMyLife: (state, action) => {
+      const liveCount = action.payload.liveCount || 0;
+      const currentLives = state.lives || 0;
+      const newLives = Math.max(0, currentLives - liveCount);
+      
       return {
         ...state,
-        lives: state.lives - action.payload.liveCount,
+        lives: newLives,
       };
     },
   },

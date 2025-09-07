@@ -45,7 +45,7 @@ export function GunHand(props) {
       console.log("Left click while holding right click detected!");
       // Your action here
     }
-  }, []);
+  }, [props.isMe]);
 
   useFrame(() => {
     gunRef.current.rotation.copy(camera.rotation);

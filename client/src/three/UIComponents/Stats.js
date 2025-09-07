@@ -20,7 +20,7 @@ const Stats = ({ lives, round, turn, otherStats, playerTurn }) => {
     <div className="stats-container">
       {players.map((player) => {
         return (
-          <div className="stats-item">
+          <div key={player} className="stats-item">
             <span>{player} : </span>
             <div className="hearts">
               {renderHearts(otherPlayerData[player].lives)}

@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { Raycaster, Vector3 } from "three";
 import { RoomContext } from "../../contexts/socketContext";
 import { toast } from "react-toastify";
+import { useGameEvents } from "../../hooks/useGameEvents";
 
 const RaycasterComponent = ({ camera, isLocked }) => {
   const { scene } = useThree();
@@ -12,7 +13,8 @@ const RaycasterComponent = ({ camera, isLocked }) => {
   const direction = new Vector3();
   const config = useSelector((state) => state.gameConfig);
   const myData = useSelector((state) => state.myPlayerData);
-  const { turn, players, bulletArr } = config;
+  const { turn, players, bulletArr, playerTurn } = config;
+  const { isCountdownActive } = useGameEvents(ws, myData.username);
   
   const turnRef = useRef(turn);
   const intersectedObjectRef = useRef(null);
@@ -26,6 +28,11 @@ const RaycasterComponent = ({ camera, isLocked }) => {
     bulletArrRef.current = bulletArr;
   }, [bulletArr]);
 
+  // Update turn ref when turn changes
+  useEffect(() => {
+    turnRef.current = turn;
+  }, [turn]);
+
   const handleClick = useCallback(
     (myself) => {
       const currentIntersectedObject = intersectedObjectRef.current;
@@ -33,7 +40,15 @@ const RaycasterComponent = ({ camera, isLocked }) => {
       if (timeBuffer) return;
       setTimeBuffer(true);
       setTimeout(() => setTimeBuffer(false), 3000);
-      if (!turnRef.current) {
+      
+      // Safety switch: prevent shooting during countdown
+      if (isCountdownActive) {
+        toast.warn("Round is starting, please wait...");
+        return;
+      }
+      
+      // Check if it's the current player's turn
+      if (playerTurn !== myData.username) {
         toast.warn("Not Your Turn Now");
         return;
       }
@@ -56,7 +71,7 @@ const RaycasterComponent = ({ camera, isLocked }) => {
         setTimeout(() => toast.info("Starting Next Round"), 2000);
       }
     },
-    [isLocked, myData.username, roomId, timeBuffer, ws]
+    [isLocked, myData.username, roomId, timeBuffer, ws, playerTurn, isCountdownActive]
   );
 
   useEffect(() => {

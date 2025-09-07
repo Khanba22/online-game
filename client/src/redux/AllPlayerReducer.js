@@ -41,14 +41,26 @@ const OtherPlayerData = createSlice({
     },
     reduceLife: (state, action) => {
       const user = action.payload.user;
-      if (state[user].lives - action.payload.liveCount === 0) {
+      const liveCount = action.payload.liveCount || 0;
+      
+      // Ensure user exists in state
+      if (!state[user]) {
+        console.warn(`User ${user} not found in state`);
+        return state;
+      }
+      
+      const currentLives = state[user].lives || 0;
+      const newLives = Math.max(0, currentLives - liveCount);
+      
+      if (newLives === 0) {
         console.log(`${user} Died`);
       }
+      
       return {
         ...state,
         [user]: {
           ...state[user],
-          lives: state[user].lives - action.payload.liveCount,
+          lives: newLives,
         },
       };
     },

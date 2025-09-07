@@ -10,22 +10,39 @@ import { setPlayer } from "../redux/PlayerDataReducer";
 import { rotatePlayer, setOtherPlayer } from "../redux/AllPlayerReducer";
 import { setPlayerArray } from "../redux/GameConfig";
 import { toast } from "react-toastify";
-const WS = process.env.REACT_APP_BACKEND_HOST_URL;
+const WS = process.env.REACT_APP_BACKEND_HOST_URL || "http://localhost:4000";
 
 export const RoomContext = createContext(null);
-console.log(WS)
-const ws = socketIoClient(WS);
+console.log("Connecting to WebSocket:", WS);
+const ws = socketIoClient(WS, {
+  transports: ['websocket', 'polling'],
+  timeout: 20000,
+});
+
+// Add connection debugging
+ws.on('connect', () => {
+  console.log('Socket connected successfully');
+});
+
+ws.on('disconnect', (reason) => {
+  console.log('Socket disconnected:', reason);
+});
+
+ws.on('connect_error', (error) => {
+  console.error('Socket connection error:', error);
+});
 export const RoomProvider = ({ children }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   // States
   const [joined, setJoined] = useState(false);
-  const [me, setMe] = useState();
+  const [me, setMe] = useState(null);
   const [roomId, setRoomId] = useState("");
   const [stream, setStream] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [myPeerId, setMyPeerId] = useState("");
+  const [isConnected, setIsConnected] = useState(false);
 
   // Selectors
   const myPlayerData = useSelector((state) => state.myPlayerData);
@@ -35,11 +52,44 @@ export const RoomProvider = ({ children }) => {
   // Refs
   const adminRef = useRef(false);
   const usernameRef = useRef(null);
+  const peerInitialized = useRef(false);
 
   // Functions
-  const enterRoom = ({ roomId }) => {
-    navigate(`/room/${roomId}`);
+  const handleSocketConnect = () => {
+    console.log('Socket connected successfully');
+    setIsConnected(true);
   };
+
+  const handleSocketDisconnect = (reason) => {
+    console.log('Socket disconnected:', reason);
+    setIsConnected(false);
+    setJoined(false);
+  };
+
+  const handleSocketError = (error) => {
+    console.error('Socket connection error:', error);
+    setIsConnected(false);
+  };
+
+  useEffect(() => {
+    ws.on('connect', handleSocketConnect);
+    ws.on('disconnect', handleSocketDisconnect);
+    ws.on('connect_error', handleSocketError);
+
+    return () => {
+      ws.off('connect', handleSocketConnect);
+      ws.off('disconnect', handleSocketDisconnect);
+      ws.off('connect_error', handleSocketError);
+    };
+  }, []);
+
+  useEffect(() => {
+    const enterRoom = ({ roomId }) => {
+      console.log('Room created, entering:', roomId);
+      setRoomId(roomId);
+      // Don't set joined=true here - let user enter name first
+      navigate(`/room/${roomId}`);
+    };
   const removePeer = ({ peerId, members, username }) => {
     dispatched(removePeerAction(peerId));
     toast.error(`${username} Left The Game`);
@@ -84,6 +134,34 @@ export const RoomProvider = ({ children }) => {
         },
       },
     });
+    
+    // Add current user to peers list for video/audio (only if not already added)
+    if (myPeerId && stream && username && !peers[myPeerId]) {
+      console.log(`Adding self to peers: ${username}`);
+      dispatched(addPeerAction(myPeerId, stream, username));
+    }
+    
+    // Establish peer connections with existing users
+    if (me && stream) {
+      console.log('Establishing peer connections with existing users...');
+      Object.keys(memberNames).forEach(existingUsername => {
+        if (existingUsername !== username && memberNames[existingUsername].peerId) {
+          console.log(`Connecting to existing user: ${existingUsername}`);
+          const call = me.call(memberNames[existingUsername].peerId, stream, {
+            metadata: {
+              username: usernameRef.current || 'You',
+            },
+          });
+          call.on("stream", (peerStream) => {
+            console.log(`Got stream from existing user: ${existingUsername}`);
+            dispatched(addPeerAction(memberNames[existingUsername].peerId, peerStream, existingUsername));
+          });
+          call.on("error", (error) => {
+            console.error(`Call error with existing user ${existingUsername}:`, error);
+          });
+        }
+      });
+    }
   };
   const startGame = ({ roomId }) => {
     setRoomId(roomId);
@@ -96,7 +174,6 @@ export const RoomProvider = ({ children }) => {
     }, 7000);
   };
 
-  useEffect(() => {
     ws.on("start-game", startGame);
     ws.on("room-created", enterRoom);
     ws.on("get-users", getUsers);
@@ -111,42 +188,72 @@ export const RoomProvider = ({ children }) => {
       toast.error("Invalid Room Code");
       navigate("/");
     });
+    
+    ws.on("join-room-error", (error) => {
+      console.error("Error joining room:", error);
+      toast.error(error.error || "Failed to join room");
+      setJoined(false);
+    });
     return () => {
       ws.off("start-game", startGame);
       ws.off("room-created", enterRoom);
       ws.off("get-users", getUsers);
       ws.off("user-disconnected", removePeer);
-      ws.off("invalid-room", () => {
-        console.error(
-          "The Room Code Is Invalid Or The Game has Already Started"
-        );
-        toast.error("Invalid Room Code");
-        navigate("/");
-      });
+      ws.off("invalid-room");
+      ws.off("join-room-error");
     };
-  }, []);
+  }, [username,navigate,dispatch]);
 
   useEffect(() => {
-    if (window.location.pathname.includes("/room")) {
+    if (window.location.pathname.includes("/room") && !peerInitialized.current) {
+      console.log('Initializing peer connection...');
+      peerInitialized.current = true;
+      
       const meId = uuidv4();
       setMyPeerId(meId);
-      const peer = new Peer(meId);
-      setMe(peer);
-      if (!peer) {
-        alert("Peer Connection Failed");
-        return;
-      }
-      try {
-        navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-          setStream(stream);
-          dispatched(addPeerAction(meId, stream));
+      
+      const peer = new Peer(meId, {
+        host: 'localhost',
+        port: 9000,
+        path: '/myapp'
+      });
+      
+      peer.on('open', (id) => {
+        console.log('Peer connection opened with ID:', id);
+        setMe(peer);
+      });
+      
+      peer.on('error', (error) => {
+        console.error('Peer connection error:', error);
+        // Fallback to a simpler configuration
+        const fallbackPeer = new Peer(meId);
+        fallbackPeer.on('open', (id) => {
+          console.log('Fallback peer connection opened with ID:', id);
+          setMe(fallbackPeer);
         });
-      } catch (error) {
-        console.error(error);
-      }
+      });
+      
+      // Get user media
+      navigator.mediaDevices.getUserMedia({ 
+        audio: true, 
+        video: false 
+      }).then((stream) => {
+        console.log('Got user media stream');
+        setStream(stream);
+        // Don't add self to peers here - this will be handled when joining room
+      }).catch((error) => {
+        console.error('Error getting user media:', error);
+        // Continue without audio if permission denied
+        setStream(null);
+      });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [window.location.pathname]);
+    
+    return () => {
+      if (window.location.pathname.includes("/room")) {
+        peerInitialized.current = false;
+      }
+    };
+  }, [window.location.pathname]); // Removed username and dispatched from dependencies
 
   useEffect(() => {
     if (username) {
@@ -156,28 +263,48 @@ export const RoomProvider = ({ children }) => {
 
   useEffect(() => {
     if (!me) return;
-    if (!stream) return;
 
-    ws.on("user-joined", ({ peerId, username }) => {
-      const call = me.call(peerId, stream, {
-        metadata: {
-          username: usernameRef.current,
-        },
-      });
-      call.on("stream", (peerStream) => {
-        dispatched(addPeerAction(peerId, peerStream, username));
-      });
-    });
+    const handleUserJoined = ({ peerId, username }) => {
+      console.log(`User joined: ${username} with peerId: ${peerId}`);
+      if (stream) {
+        const call = me.call(peerId, stream, {
+          metadata: {
+            username: usernameRef.current || 'You',
+          },
+        });
+        call.on("stream", (peerStream) => {
+          console.log(`Got stream from ${username}`);
+          dispatched(addPeerAction(peerId, peerStream, username));
+        });
+        call.on("error", (error) => {
+          console.error(`Call error with ${username}:`, error);
+        });
+      }
+    };
 
-    me.on("call", (call) => {
+    const handleIncomingCall = (call) => {
+      console.log(`Incoming call from ${call.metadata.username}`);
       const caller = call.metadata.username;
-      call.answer(stream, { metadata: { username } });
+      if (stream) {
+        call.answer(stream, { metadata: { username: usernameRef.current || 'You' } });
+      }
       call.on("stream", (peerStream) => {
+        console.log(`Got stream from incoming call: ${caller}`);
         dispatched(addPeerAction(call.peer, peerStream, caller));
       });
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [me, stream]);
+      call.on("error", (error) => {
+        console.error(`Incoming call error from ${caller}:`, error);
+      });
+    };
+
+    ws.on("user-joined", handleUserJoined);
+    me.on("call", handleIncomingCall);
+
+    return () => {
+      ws.off("user-joined", handleUserJoined);
+      me.off("call", handleIncomingCall);
+    };
+  }, [me, stream, dispatched, ws]);
 
   return (
     <RoomContext.Provider
@@ -195,6 +322,7 @@ export const RoomProvider = ({ children }) => {
         setJoined,
         isAdmin,
         setIsAdmin,
+        isConnected,
       }}
     >
       {children}
