@@ -4,7 +4,6 @@ import { useSelector } from "react-redux";
 import { Raycaster, Vector3 } from "three";
 import { RoomContext } from "../../contexts/socketContext";
 import { toast } from "react-toastify";
-import { useGameEvents } from "../../hooks/useGameEvents";
 
 const RaycasterComponent = ({ camera, isLocked }) => {
   const { scene } = useThree();
@@ -14,7 +13,6 @@ const RaycasterComponent = ({ camera, isLocked }) => {
   const config = useSelector((state) => state.gameConfig);
   const myData = useSelector((state) => state.myPlayerData);
   const { turn, players, bulletArr, playerTurn } = config;
-  const { isCountdownActive } = useGameEvents(ws, myData.username);
   
   const turnRef = useRef(turn);
   const intersectedObjectRef = useRef(null);
@@ -41,11 +39,11 @@ const RaycasterComponent = ({ camera, isLocked }) => {
       setTimeBuffer(true);
       setTimeout(() => setTimeBuffer(false), 3000);
       
-      // Safety switch: prevent shooting during countdown
-      if (isCountdownActive) {
-        toast.warn("Round is starting, please wait...");
-        return;
-      }
+      // Safety switch: prevent shooting during countdown (removed - not essential for shooting logic)
+      // if (isCountdownActive) {
+      //   toast.warn("Round is starting, please wait...");
+      //   return;
+      // }
       
       // Check if it's the current player's turn
       if (playerTurn !== myData.username) {
@@ -53,12 +51,22 @@ const RaycasterComponent = ({ camera, isLocked }) => {
         return;
       }
       if (!myself && currentIntersectedObject?.userData?.username) {
+        console.log(`🎯 [CLIENT] Emitting shoot-player event:`, {
+          shooter: myData.username,
+          victim: currentIntersectedObject.userData.username,
+          roomId
+        });
         ws.emit("shoot-player", {
           shooter: myData.username,
           victim: currentIntersectedObject.userData.username,
           roomId,
         });
       } else {
+        console.log(`🎯 [CLIENT] Emitting shoot-player event (self):`, {
+          shooter: myData.username,
+          victim: myData.username,
+          roomId
+        });
         ws.emit("shoot-player", {
           shooter: myData.username,
           victim: myData.username,
@@ -71,7 +79,7 @@ const RaycasterComponent = ({ camera, isLocked }) => {
         setTimeout(() => toast.info("Starting Next Round"), 2000);
       }
     },
-    [isLocked, myData.username, roomId, timeBuffer, ws, playerTurn, isCountdownActive]
+    [isLocked, myData.username, roomId, timeBuffer, ws, playerTurn]
   );
 
   useEffect(() => {

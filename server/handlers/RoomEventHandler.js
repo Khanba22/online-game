@@ -1,16 +1,17 @@
 const { handleSocketError } = require('../utils/errorHandler');
+const RoomManager = require('../managers/RoomManager');
 
 class RoomEventHandler {
-  constructor(gameStateManager) {
-    this.gameStateManager = gameStateManager;
+  constructor() {
+    this.roomManager = new RoomManager();
   }
 
   handleCreateRoom(socket) {
     try {
-      const roomId = this.gameStateManager.createRoom(socket);
+      const roomId = this.roomManager.createRoom(socket);
       socket.emit("room-created", { roomId });
       console.log(`Room created: ${roomId} by socket ${socket.id}`);
-      this.gameStateManager.listRooms(); // Debug: list all rooms
+      this.roomManager.debugRoomInfo(roomId); // Debug: list all rooms
     } catch (error) {
       console.error('Error creating room:', error);
       handleSocketError(socket, error, 'create-room-error');

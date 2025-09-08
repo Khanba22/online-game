@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
-import { addEquipment, reduceMyLife } from '../redux/PlayerDataReducer';
+import { addEquipment } from '../redux/PlayerDataReducer';
 import { reduceLife, usePlayerEquipment } from '../redux/AllPlayerReducer';
-import { setBulletArr, updateGameTurn } from '../redux/GameConfig';
+import { updateGameTurn, setBulletArr } from '../redux/GameConfig';
 
 export const useGameEvents = (ws, username) => {
   const dispatch = useDispatch();
@@ -23,15 +23,24 @@ export const useGameEvents = (ws, username) => {
     }
   }, []);
 
-  // Handle player being shot
+  // Handle player being shot - ONLY update state based on server data
   const shotPlayer = useCallback((data) => {
+    console.log(`🎯 [CLIENT] Received player-shot event:`, {
+      victim: data.victim,
+      victimLives: data.victimLives,
+      livesTaken: data.livesTaken,
+      isBulletLive: data.isBulletLive,
+      currentTurn: data.currentTurn,
+      playerTurn: data.playerTurn
+    });
+
     const {
-      shooter,
       isBulletLive,
       victim,
-      livesTaken,
       currentTurn,
       playerTurn,
+      victimLives,
+      bulletArr
     } = data;
     try {
       playSound(
@@ -39,35 +48,33 @@ export const useGameEvents = (ws, username) => {
       );
       toast.info(isBulletLive ? "Bullet Was Live" : "Bullet Was Fake");
 
-      // Update bullet array from server response
-      if (data.bulletArr) {
+      // Update bullet array from server response (authoritative)
+      if (bulletArr) {
         dispatch({
           type: `${setBulletArr}`,
-          payload: { bulletArr: data.bulletArr },
+          payload: bulletArr,
         });
       }
       
+      // Update turn from server
       dispatch({
         type: `${updateGameTurn}`,
         payload: { playerTurn, turn: currentTurn },
       });
 
-      if (victim === username) {
+      // Update lives based on server-provided life counts (authoritative)
+      if (victimLives !== undefined) {
+        console.log(`💀 [CLIENT] Updating ${victim}'s lives to ${victimLives} (server authoritative)`);
         dispatch({
-          type: `${reduceMyLife}`,
-          payload: { liveCount: livesTaken },
+          type: `${reduceLife}`,
+          payload: { user: victim, lives: victimLives },
         });
       }
-
-      dispatch({
-        type: `${reduceLife}`,
-        payload: { user: victim, liveCount: livesTaken },
-      });
     } catch (error) {
       console.error('Error handling player shot:', error);
       setGameError('Failed to process player shot');
     }
-  }, [playSound, dispatch, username]);
+  }, [playSound, dispatch]);
 
   // Countdown function for round start
   const countdown = useCallback(async (seconds, live, fakes) => {
@@ -136,21 +143,108 @@ export const useGameEvents = (ws, username) => {
     }
   }, []);
 
-  // Handle equipment usage
-  const usedEquipment = useCallback(({ user, equipment }) => {
+  // Handle equipment usage with full synchronization
+  const usedEquipment = useCallback((data) => {
+    console.log(`⚙️ [CLIENT] Received used-equipment event:`, {
+      user: data.user,
+      equipment: data.equipment,
+      lives: data.lives,
+      message: data.message,
+      playerState: data.playerState
+    });
+
     try {
-      if (equipment === "heals") {
+      const { 
+        user, 
+        equipment, 
+        equipmentCount, 
+        lives, 
+        isShielded, 
+        hasDoubleDamage, 
+        canLookBullet, 
+        hasDoubleTurn,
+        message,
+        currentTurn,
+        playerTurn,
+        playerState
+      } = data;
+
+      // Use complete player state from server if available
+      if (playerState) {
+        console.log(`📦 [CLIENT] Using complete player state from server:`, playerState);
         dispatch({
           type: `${usePlayerEquipment}`,
-          payload: { user, equipmentType: equipment },
+          payload: { 
+            user, 
+            equipmentType: equipment,
+            equipmentCount: playerState.equipment[equipment],
+            lives: playerState.lives,
+            isShielded: playerState.isShielded,
+            hasDoubleDamage: playerState.hasDoubleDamage,
+            canLookBullet: playerState.canLookBullet,
+            hasDoubleTurn: playerState.hasDoubleTurn
+          },
+        });
+      } else {
+        console.log(`📦 [CLIENT] Using individual properties (fallback)`);
+        // Fallback to individual properties
+        dispatch({
+          type: `${usePlayerEquipment}`,
+          payload: { 
+            user, 
+            equipmentType: equipment,
+            equipmentCount,
+            lives,
+            isShielded,
+            hasDoubleDamage,
+            canLookBullet,
+            hasDoubleTurn
+          },
         });
       }
-      toast.info(`${user} Activated ${equipment}`);
+
+      // Update turn if it's a skip turn
+      if (equipment === "skip" && currentTurn !== undefined && playerTurn) {
+        dispatch({
+          type: `${updateGameTurn}`,
+          payload: { playerTurn, turn: currentTurn },
+        });
+      }
+
+      // Show equipment usage message
+      if (message) {
+        toast.success(message);
+      }
     } catch (error) {
       console.error('Error handling equipment usage:', error);
       setGameError('Failed to process equipment usage');
     }
   }, [dispatch]);
+
+  // Handle looker equipment usage
+  const bulletLooked = useCallback((data) => {
+    try {
+      const { isLive, message } = data;
+      
+      // Show bullet status with appropriate styling
+      toast.info(message || `🔍 The next bullet is ${isLive ? 'LIVE' : 'FAKE'}!`, {
+        autoClose: 3000,
+        className: isLive ? 'toast-live' : 'toast-fake'
+      });
+    } catch (error) {
+      console.error('Error handling bullet look:', error);
+    }
+  }, []);
+
+  // Handle when someone else uses looker
+  const playerUsedLooker = useCallback((data) => {
+    try {
+      const { player, message } = data;
+      toast.info(message || `${player} used looker equipment`);
+    } catch (error) {
+      console.error('Error handling looker usage:', error);
+    }
+  }, []);
 
   // Setup socket event listeners
   useEffect(() => {
@@ -164,6 +258,12 @@ export const useGameEvents = (ws, username) => {
       ws.on("round-started", roundStart);
       ws.on("round-over", roundOver);
       ws.on("used-equipment", usedEquipment);
+      ws.on("bullet-looked", bulletLooked);
+      ws.on("player-used-looker", playerUsedLooker);
+      ws.on("equipment-error", (error) => {
+        console.error('Equipment error:', error);
+        toast.error(error.message || 'Equipment usage failed');
+      });
       ws.on("error", (error) => {
         console.error('Socket error:', error);
         setGameError('Connection error occurred');
@@ -174,13 +274,16 @@ export const useGameEvents = (ws, username) => {
         ws.off("round-started", roundStart);
         ws.off("round-over", roundOver);
         ws.off("used-equipment", usedEquipment);
+        ws.off("bullet-looked", bulletLooked);
+        ws.off("player-used-looker", playerUsedLooker);
+        ws.off("equipment-error");
         ws.off("error");
       };
     } catch (error) {
       console.error('Error setting up socket listeners:', error);
       setGameError('Failed to initialize game connection');
     }
-  }, [ws, shotPlayer, roundStart, roundOver, usedEquipment]);
+  }, [ws, shotPlayer, roundStart, roundOver, usedEquipment, bulletLooked, playerUsedLooker]);
 
   return {
     gameError,

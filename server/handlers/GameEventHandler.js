@@ -1,14 +1,19 @@
 const { handleSocketError } = require('../utils/errorHandler');
+const RoomManager = require('../managers/RoomManager');
+const EquipmentManager = require('../managers/EquipmentManager');
+const RoundManager = require('../managers/RoundManager');
 
 class GameEventHandler {
-  constructor(gameStateManager) {
-    this.gameStateManager = gameStateManager;
+  constructor() {
+    this.roomManager = new RoomManager();
+    this.equipmentManager = new EquipmentManager(this.roomManager);
+    this.roundManager = new RoundManager(this.roomManager, this.equipmentManager);
   }
 
   handleStartRound(socket, { roomId }) {
     try {
       const normalizedRoomId = roomId.toLowerCase();
-      const roundData = this.gameStateManager.startRound(normalizedRoomId);
+      const roundData = this.roundManager.startRound(normalizedRoomId);
       
       socket.emit("round-started", roundData);
       socket.to(normalizedRoomId).emit("round-started", roundData);
@@ -19,14 +24,22 @@ class GameEventHandler {
 
   handleShootPlayer(socket, { shooter, victim, roomId }) {
     try {
+      console.log(`🎯 [GAME HANDLER] Processing shoot: ${shooter} → ${victim} in room ${roomId}`);
       const normalizedRoomId = roomId.toLowerCase();
-      const shotData = this.gameStateManager.shootPlayer(normalizedRoomId, shooter, victim);
+      const shotData = this.roundManager.shootPlayer(normalizedRoomId, shooter, victim);
+      
+      console.log(`📤 [GAME HANDLER] Broadcasting player-shot to room ${normalizedRoomId}:`, {
+        victim: shotData.victim,
+        victimLives: shotData.victimLives,
+        livesTaken: shotData.livesTaken,
+        isBulletLive: shotData.isBulletLive
+      });
       
       socket.to(normalizedRoomId).emit("player-shot", shotData);
       socket.emit("player-shot", shotData);
 
       // Check for game over
-      const gameOver = this.gameStateManager.checkGameOver(normalizedRoomId);
+      const gameOver = this.roundManager.checkGameOver(normalizedRoomId);
       if (gameOver) {
         socket.emit("game-over", gameOver);
         socket.to(normalizedRoomId).emit("game-over", gameOver);
@@ -34,8 +47,7 @@ class GameEventHandler {
       }
 
       // Check if round is over
-      const roomConfig = this.gameStateManager.roomConfigs[normalizedRoomId];
-      if (roomConfig.bulletArr.length === 0) {
+      if (this.roundManager.isRoundOver(normalizedRoomId)) {
         socket.emit("round-over");
         socket.to(normalizedRoomId).emit("round-over");
         
@@ -51,11 +63,47 @@ class GameEventHandler {
 
   handleUseEquipment(socket, { roomId, player, equipmentType }) {
     try {
-      const equipmentData = this.gameStateManager.useEquipment(roomId, player, equipmentType);
+      console.log(`⚙️ [GAME HANDLER] Processing equipment: ${player} using ${equipmentType} in room ${roomId}`);
+      const normalizedRoomId = roomId.toLowerCase();
+      const equipmentData = this.equipmentManager.useEquipment(normalizedRoomId, player, equipmentType);
       
-      socket.to(roomId).emit("used-equipment", equipmentData);
+      // Handle skip turn if it's a skip equipment
+      if (equipmentData.skipTurn) {
+        const turnData = this.roundManager.handleSkipTurn(normalizedRoomId, player, equipmentData.skipCount);
+        equipmentData.currentTurn = turnData.currentTurn;
+        equipmentData.playerTurn = turnData.playerTurn;
+        equipmentData.skipCount = turnData.skipCount;
+      }
+      
+      console.log(`📤 [GAME HANDLER] Broadcasting used-equipment to room ${normalizedRoomId}:`, {
+        user: equipmentData.user,
+        equipment: equipmentData.equipment,
+        lives: equipmentData.lives,
+        message: equipmentData.message
+      });
+      
+      socket.to(normalizedRoomId).emit("used-equipment", equipmentData);
+      socket.emit("used-equipment", equipmentData);
     } catch (error) {
       handleSocketError(socket, error, 'equipment-error');
+    }
+  }
+
+  handleLookBullet(socket, { roomId, player }) {
+    try {
+      console.log(`👁️ [GAME HANDLER] Processing look-bullet: ${player} in room ${roomId}`);
+      const normalizedRoomId = roomId.toLowerCase();
+      const lookData = this.equipmentManager.lookAtBullet(normalizedRoomId, player);
+      
+      console.log(`📤 [GAME HANDLER] Broadcasting bullet-looked to ${player}:`, lookData);
+      
+      socket.emit("bullet-looked", lookData);
+      socket.to(normalizedRoomId).emit("player-used-looker", {
+        player,
+        message: `${player} used looker!`
+      });
+    } catch (error) {
+      handleSocketError(socket, error, 'looker-error');
     }
   }
 
@@ -72,45 +120,17 @@ class GameEventHandler {
       const userRooms = Array.from(socket.rooms).filter(roomId => roomId !== socket.id);
       
       userRooms.forEach((roomId) => {
-        const roomData = this.gameStateManager.getRoomData(roomId);
-        const username = Object.keys(roomData.memberNames).find(
-          name => roomData.memberNames[name]?.peerId === socket.id
-        );
-
-        if (username) {
-          const disconnectData = this.gameStateManager.handleDisconnect(
-            socket, 
-            roomId, 
-            socket.id, 
-            username
-          );
-          
-          socket.to(roomId).emit("user-disconnected", disconnectData);
-
-          // Clean up empty rooms
-          if (Object.keys(roomData.memberNames).length === 0) {
-            delete this.gameStateManager.roomConfigs[roomId];
-          }
-        }
+        this.roomManager.handleDisconnect(socket, roomId);
       });
     } catch (error) {
       console.error('Error handling disconnect:', error);
     }
   }
 
-  handleReconnect(socket, { roomId, userId }) {
+  handleReconnect(socket, { roomId, peerId, username }) {
     try {
-      if (this.gameStateManager.disconnected[roomId]) {
-        this.gameStateManager.roomConfigs[roomId] = this.gameStateManager.disconnected[roomId];
-        delete this.gameStateManager.disconnected[roomId];
-
-        socket.join(roomId);
-        socket.emit("reconnected", { 
-          roomConfig: this.gameStateManager.roomConfigs[roomId], 
-          roomId 
-        });
-        socket.to(roomId).emit("user-reconnected", { user: userId });
-      }
+      const result = this.roomManager.handleReconnect(socket, roomId, peerId, username);
+      socket.emit("reconnected", result);
     } catch (error) {
       handleSocketError(socket, error, 'reconnect-error');
     }
@@ -120,6 +140,7 @@ class GameEventHandler {
     socket.on("start-round", (data) => this.handleStartRound(socket, data));
     socket.on("shoot-player", (data) => this.handleShootPlayer(socket, data));
     socket.on("use-equipment", (data) => this.handleUseEquipment(socket, data));
+    socket.on("look-bullet", (data) => this.handleLookBullet(socket, data));
     socket.on("rotate", (data) => this.handleRotate(socket, data));
     socket.on("disconnect", () => this.handleDisconnect(socket));
     socket.on("reconnect-user", (data) => this.handleReconnect(socket, data));

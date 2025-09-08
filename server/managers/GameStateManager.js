@@ -126,30 +126,51 @@ class GameStateManager {
     const bullet = roomConfig.bulletArr.pop();
     
     if (bullet === 1) {
-      // Live bullet - player is eliminated
-      this.roomNames[normalizedRoomId][victim].isAlive = false;
-      this.roomNames[normalizedRoomId][victim].lives = 0;
+      // Live bullet - reduce lives by 1, don't eliminate immediately
+      const currentLives = this.roomNames[normalizedRoomId][victim].lives || 0;
+      const newLives = Math.max(0, currentLives - 1);
+      this.roomNames[normalizedRoomId][victim].lives = newLives;
       
-      // Move to next turn
+      // Only eliminate if lives reach 0
+      if (newLives === 0) {
+        this.roomNames[normalizedRoomId][victim].isAlive = false;
+      }
+      
+      // Live bullet - always move to next turn
       this.moveToNextTurn(normalizedRoomId);
+      
+      const finalTurn = roomConfig.turn;
+      const finalPlayerTurn = this.getCurrentPlayer(normalizedRoomId);
+      console.log(`🎯 [SHOOT RESULT] Live bullet - Final turn: ${finalTurn}, Player turn: ${finalPlayerTurn}`);
       
       return {
         shooter,
         victim,
         isLive: true,
         isBulletLive: true,
-        eliminated: victim,
+        eliminated: newLives === 0 ? victim : null,
         livesTaken: 1,
-        turn: roomConfig.turn,
-        currentTurn: roomConfig.turn,
-        playerTurn: this.getCurrentPlayer(normalizedRoomId),
+        victimLives: newLives,
+        shooterLives: this.roomNames[normalizedRoomId][shooter].lives,
+        turn: finalTurn,
+        currentTurn: finalTurn,
+        playerTurn: finalPlayerTurn,
         bulletArr: roomConfig.bulletArr
       };
     } else {
       // Fake bullet - player survives
+      // Only move to next turn if shooter shot someone else
+      if (shooter !== victim) {
+        console.log(`🎯 [SHOOT RESULT] Fake bullet on other player - moving turn`);
+        this.moveToNextTurn(normalizedRoomId);
+      } else {
+        console.log(`🎯 [SHOOT RESULT] Fake bullet on self - keeping turn`);
+      }
+      // If shooter shot himself with fake bullet, turn stays the same
       
-      // Move to next turn
-      this.moveToNextTurn(normalizedRoomId);
+      const finalTurn = roomConfig.turn;
+      const finalPlayerTurn = this.getCurrentPlayer(normalizedRoomId);
+      console.log(`🎯 [SHOOT RESULT] Fake bullet - Final turn: ${finalTurn}, Player turn: ${finalPlayerTurn}`);
       
       return {
         shooter,
@@ -158,9 +179,11 @@ class GameStateManager {
         isBulletLive: false,
         eliminated: null,
         livesTaken: 0,
-        turn: roomConfig.turn,
-        currentTurn: roomConfig.turn,
-        playerTurn: this.getCurrentPlayer(normalizedRoomId),
+        victimLives: this.roomNames[normalizedRoomId][victim].lives,
+        shooterLives: this.roomNames[normalizedRoomId][shooter].lives,
+        turn: finalTurn,
+        currentTurn: finalTurn,
+        playerTurn: finalPlayerTurn,
         bulletArr: roomConfig.bulletArr
       };
     }
@@ -170,18 +193,90 @@ class GameStateManager {
     const normalizedRoomId = this.validateRoom(roomId);
     this.validateGameState(normalizedRoomId);
 
+    console.log(`⚙️ [EQUIPMENT EVENT] Player: ${player}, Equipment: ${equipmentType}, Room: ${normalizedRoomId}`);
+
     const playerData = this.roomNames[normalizedRoomId][player];
-    if (!playerData.equipments[equipmentType]) {
+    
+    // Check if player has the equipment
+    if (!playerData.equipments || !playerData.equipments[equipmentType] || playerData.equipments[equipmentType] <= 0) {
+      console.log(`❌ [EQUIPMENT ERROR] Player ${player} doesn't have ${equipmentType}`);
       throw createError(errorTypes.INVALID_EQUIPMENT, 'Equipment not available');
     }
 
-    playerData.equipments[equipmentType] -= 1;
+    console.log(`📦 [EQUIPMENT] Player ${player} has ${playerData.equipments[equipmentType]} ${equipmentType}(s)`);
 
-    return {
-      player,
-      equipmentType,
-      remaining: playerData.equipments[equipmentType]
+    // Equipment effect mapping
+    const effectMap = {
+      shield: "isShielded",
+      doubleDamage: "hasDoubleDamage", 
+      heals: "healing",
+      looker: "canLookBullet",
+      doubleTurn: "hasDoubleTurn",
+      skip: "skipTurn"
     };
+
+    const effect = effectMap[equipmentType];
+    if (!effect) {
+      console.log(`❌ [EQUIPMENT ERROR] Invalid equipment type: ${equipmentType}`);
+      throw createError(errorTypes.INVALID_EQUIPMENT, 'Invalid equipment type');
+    }
+
+    // Consume the equipment
+    playerData.equipments[equipmentType] -= 1;
+    console.log(`📦 [EQUIPMENT] Consumed 1 ${equipmentType}, remaining: ${playerData.equipments[equipmentType]}`);
+
+    // Apply equipment effects
+    let equipmentData = {
+      user: player,
+      equipment: equipmentType,
+      equipmentCount: playerData.equipments[equipmentType],
+      lives: playerData.lives,
+      isShielded: playerData.isShielded || false,
+      hasDoubleDamage: playerData.hasDoubleDamage || false,
+      canLookBullet: playerData.canLookBullet || false,
+      hasDoubleTurn: playerData.hasDoubleTurn || false,
+      // Send complete player state for synchronization
+      playerState: {
+        lives: playerData.lives,
+        isShielded: playerData.isShielded || false,
+        hasDoubleDamage: playerData.hasDoubleDamage || false,
+        canLookBullet: playerData.canLookBullet || false,
+        hasDoubleTurn: playerData.hasDoubleTurn || false,
+        equipment: { ...playerData.equipments }
+      }
+    };
+
+    if (effect === "healing") {
+      const oldLives = playerData.lives;
+      playerData.lives += 1;
+      equipmentData.lives = playerData.lives;
+      equipmentData.playerState.lives = playerData.lives;
+      equipmentData.message = `${player} used heal and gained 1 life!`;
+      console.log(`❤️ [HEAL] Player ${player} healed: ${oldLives} → ${playerData.lives} lives`);
+    } else if (equipmentType === "skip") {
+      // Skip turn - move to next alive player
+      const oldTurn = this.roomConfigs[normalizedRoomId].turn;
+      this.moveToNextTurn(normalizedRoomId);
+      equipmentData.message = `${player} used skip turn!`;
+      equipmentData.currentTurn = this.roomConfigs[normalizedRoomId].turn;
+      equipmentData.playerTurn = this.getCurrentPlayer(normalizedRoomId);
+      console.log(`⏭️ [SKIP] Turn skipped: ${oldTurn} → ${this.roomConfigs[normalizedRoomId].turn}`);
+    } else {
+      playerData[effect] = true;
+      equipmentData[effect] = true;
+      equipmentData.playerState[effect] = true;
+      equipmentData.message = `${player} used ${equipmentType}!`;
+      console.log(`✨ [EFFECT] Player ${player} activated ${equipmentType}, ${effect}: true`);
+    }
+
+    console.log(`📤 [EQUIPMENT RESULT] Returning equipment data:`, {
+      user: equipmentData.user,
+      equipment: equipmentData.equipment,
+      lives: equipmentData.lives,
+      message: equipmentData.message
+    });
+
+    return equipmentData;
   }
 
   checkGameOver(roomId) {
@@ -238,9 +333,17 @@ class GameStateManager {
       cameraOffset: { x: 0, y: 0, z: 0 },
       equipments: {
         shield: 1,
-        knife: 1,
-        magnifyingGlass: 1
-      }
+        doubleDamage: 1,
+        heals: 1,
+        looker: 1,
+        doubleTurn: 1,
+        skip: 1
+      },
+      // Equipment status flags
+      isShielded: false,
+      hasDoubleDamage: false,
+      canLookBullet: false,
+      hasDoubleTurn: false
     };
   }
 
@@ -294,7 +397,10 @@ class GameStateManager {
     const players = Object.keys(this.roomNames[normalizedRoomId]);
     const alivePlayers = players.filter(player => this.roomNames[normalizedRoomId][player].isAlive);
     
+    console.log(`🔄 [TURN] Moving to next turn. Current turn: ${roomConfig.turn}, Alive players: ${alivePlayers.length}`);
+    
     if (alivePlayers.length <= 1) {
+      console.log(`🔄 [TURN] Game over - not moving turn`);
       return; // Game over, no need to move turn
     }
     
@@ -302,12 +408,17 @@ class GameStateManager {
     let nextTurn = (roomConfig.turn + 1) % players.length;
     let attempts = 0;
     
+    console.log(`🔄 [TURN] Starting from turn ${nextTurn}, checking ${players[nextTurn]}`);
+    
     while (!this.roomNames[normalizedRoomId][players[nextTurn]].isAlive && attempts < players.length) {
       nextTurn = (nextTurn + 1) % players.length;
       attempts++;
+      console.log(`🔄 [TURN] Player ${players[nextTurn]} is dead, trying next: ${nextTurn}`);
     }
     
+    const oldTurn = roomConfig.turn;
     roomConfig.turn = nextTurn;
+    console.log(`🔄 [TURN] Turn changed: ${oldTurn} → ${roomConfig.turn} (${players[roomConfig.turn]})`);
   }
 
   validateRoom(roomId) {

@@ -4,13 +4,14 @@ const colorArr = ["red", "blue", "green", "black", "purple"];
 const playerPositionArr = require("../data/positionConfig.json");
 
 const defaultConfig = {
-  lives: 5,
+  lives: 3,
   equipment: {
     shield: 0,
     doubleDamage: 0,
     heals: 0,
     looker: 0,
     doubleTurn: 0,
+    skip: 0,
   },
   neckRotation: [0, 0, 0],
   isShielded: false,

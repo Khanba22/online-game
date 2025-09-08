@@ -28,10 +28,10 @@ const EquipmentBar = () => {
 
       // Handle special equipment effects
       if (eq === "looker") {
-        const isLive = bulletArr[bulletArr.length - 1];
-        toast.info(`🔍 ${isLive ? "Bullet is LIVE!" : "Bullet is FAKE!"}`, {
-          autoClose: 3000,
-          className: isLive ? 'toast-live' : 'toast-fake'
+        // For looker, emit to server to get bullet status
+        ws.emit("look-bullet", {
+          roomId,
+          player: username,
         });
       } else {
         toast.success(`✨ ${eq} activated!`, {
@@ -39,28 +39,20 @@ const EquipmentBar = () => {
         });
       }
 
-      // Emit to server
+      // Emit to server - server will handle equipment consumption and broadcast to all clients
+      console.log(`⚙️ [CLIENT] Emitting use-equipment event:`, {
+        roomId,
+        equipmentType: eq,
+        player: username
+      });
       ws.emit("use-equipment", {
         roomId,
         equipmentType: eq,
         player: username,
       });
 
-      // Update local state
-      dispatch({
-        type: `${useEquipment}`,
-        payload: {
-          equipmentType: eq,
-        },
-      });
-
-      dispatch({
-        type: `${usePlayerEquipment}`,
-        payload: {
-          user: username,
-          equipmentType: eq,
-        },
-      });
+      // Don't update local state here - wait for server response via used-equipment event
+      // This prevents double consumption of equipment
 
     } catch (error) {
       console.error('Error using equipment:', error);
@@ -68,7 +60,7 @@ const EquipmentBar = () => {
     } finally {
       setTimeout(() => setIsUsingEquipment(false), 1000);
     }
-  }, [ws, roomId, username, equipment, bulletArr, dispatch, playSound, isUsingEquipment]);
+  }, [ws, roomId, username, equipment, playSound, isUsingEquipment]);
 
   const getEquipmentDescription = (eq) => {
     const descriptions = {
@@ -76,7 +68,8 @@ const EquipmentBar = () => {
       looker: "Check if bullet is live",
       shield: "Block next shot",
       doubleDamage: "Next shot deals 2 damage",
-      doubleTurn: "Take another turn"
+      doubleTurn: "Take another turn",
+      skip: "Skip to next player's turn"
     };
     return descriptions[eq] || "Unknown equipment";
   };

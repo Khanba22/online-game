@@ -202,6 +202,7 @@ export const RoomProvider = ({ children }) => {
       ws.off("invalid-room");
       ws.off("join-room-error");
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [username,navigate,dispatch]);
 
   useEffect(() => {
@@ -253,6 +254,7 @@ export const RoomProvider = ({ children }) => {
         peerInitialized.current = false;
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [window.location.pathname]); // Removed username and dispatched from dependencies
 
   useEffect(() => {
@@ -304,6 +306,7 @@ export const RoomProvider = ({ children }) => {
       ws.off("user-joined", handleUserJoined);
       me.off("call", handleIncomingCall);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [me, stream, dispatched, ws]);
 
   return (

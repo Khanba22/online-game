@@ -5,7 +5,6 @@ const cors = require("cors");
 require("dotenv").config();
 
 // Import our new modular components
-const GameStateManager = require("./managers/GameStateManager");
 const GameEventHandler = require("./handlers/GameEventHandler");
 const RoomEventHandler = require("./handlers/RoomEventHandler");
 const { handleSocketError } = require("./utils/errorHandler");
@@ -19,10 +18,9 @@ const server = http.createServer(app);
 app.use(cors(config.cors));
 app.use(express.json());
 
-// Initialize game state manager
-const gameStateManager = new GameStateManager();
-const gameEventHandler = new GameEventHandler(gameStateManager);
-const roomEventHandler = new RoomEventHandler(gameStateManager);
+// Initialize modular handlers
+const gameEventHandler = new GameEventHandler();
+const roomEventHandler = new RoomEventHandler();
 
 // Socket.IO configuration
 const io = new Server(server, config.socket);
@@ -41,7 +39,7 @@ app.get("/health", (req, res) => {
     status: "healthy",
     uptime: process.uptime(),
     memory: process.memoryUsage(),
-    rooms: Object.keys(gameStateManager.rooms).length
+    rooms: gameEventHandler.roomManager.getAllRooms().length
   });
 });
 

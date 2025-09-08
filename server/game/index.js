@@ -4,6 +4,7 @@ const equipmentList = [
   "shield",
   "doubleDamage",
   "doubleTurn",
+  "skip",
 ];
 
 const effectMap = {
@@ -12,6 +13,7 @@ const effectMap = {
   looker: "canLookBullet",
   heals: "healing",
   doubleTurn: "hasDoubleTurn",
+  skip: "skipTurn",
 };
 
 function createRandomizedArray(n, m) {
@@ -37,7 +39,7 @@ const gameHandler = (socket, rooms, roomName, roomConfig, disconnected) => {
       Object.keys(roomName[roomId]).map((member) => {
         const memberEquipments = {};
         for (let index = 0; index < 2; index++) {
-          const equipmentIndex = Math.floor(Math.random() * 5);
+          const equipmentIndex = Math.floor(Math.random() * equipmentList.length);
           const equipment = equipmentList[equipmentIndex];
           memberEquipments[equipment] = (memberEquipments[equipment] || 0) + 1;
         }
@@ -72,7 +74,8 @@ const gameHandler = (socket, rooms, roomName, roomConfig, disconnected) => {
     const players = Object.keys(roomName[roomId]);
     let turn = (gameDetails.turn + 1) % gameDetails.memberNo;
 
-    for (let i = 0; i < 6; i++) {
+    // Fixed: Use proper loop limit based on number of players
+    for (let i = 0; i < gameDetails.memberNo; i++) {
       if (roomName[roomId][players[turn]].lives > 0) break;
       turn = (turn + 1) % gameDetails.memberNo;
     }
@@ -96,23 +99,69 @@ const gameHandler = (socket, rooms, roomName, roomConfig, disconnected) => {
 
   const shootPlayer = ({ shooter, victim, roomId }) => {
     try {
+      console.log(`🎯 [SHOOT EVENT] Shooter: ${shooter}, Victim: ${victim}, Room: ${roomId}`);
+      
       const gameDetails = roomConfig[roomId];
       const roomStats = roomName[roomId];
-      const damage = roomStats[shooter].hasDoubleDamage ? 2 : 1;
+      
+      // Log initial state
+      console.log(`📊 [BEFORE SHOT] Victim lives: ${roomStats[victim]?.lives}, Shooter lives: ${roomStats[shooter]?.lives}`);
+      console.log(`🔫 [BULLET ARRAY] Before: [${gameDetails.bulletArr.join(', ')}]`);
+      
       const isBulletLive = gameDetails.bulletArr.pop();
       let livesTaken = 0;
+      
+      console.log(`💥 [BULLET RESULT] Is Live: ${isBulletLive}, Bullet Array After: [${gameDetails.bulletArr.join(', ')}]`);
 
-      if (!roomStats[victim].isShielded && isBulletLive) {
+      // Check if victim has shield - shield negates any damage (live or fake)
+      if (roomStats[victim].isShielded) {
+        // Shield negates damage and is consumed
+        livesTaken = 0;
+        console.log(`🛡️ [SHIELD] Victim ${victim} has shield - damage negated`);
+        roomStats[victim].isShielded = false;
+        // Remove shield equipment from victim
+        if (roomStats[victim].equipment && roomStats[victim].equipment.shield > 0) {
+          roomStats[victim].equipment.shield -= 1;
+          console.log(`🛡️ [SHIELD] Shield equipment consumed, remaining: ${roomStats[victim].equipment.shield}`);
+        }
+      } else if (isBulletLive) {
+        // No shield and live bullet - deal damage
+        const baseDamage = 1;
+        const damage = roomStats[shooter].hasDoubleDamage ? baseDamage * 2 : baseDamage;
+        const oldLives = roomStats[victim].lives;
         roomStats[victim].lives = Math.max(0, roomStats[victim].lives - damage);
         livesTaken = damage;
+        console.log(`💀 [DAMAGE] ${damage} damage dealt (${oldLives} → ${roomStats[victim].lives} lives)`);
+        if (roomStats[shooter].hasDoubleDamage) {
+          console.log(`⚔️ [DOUBLE DAMAGE] Shooter ${shooter} has double damage active`);
+        }
+      } else {
+        // Fake bullet with no shield - no damage
+        livesTaken = 0;
+        console.log(`🎭 [FAKE BULLET] No damage dealt`);
       }
 
-      if (
-        !roomStats[shooter].hasDoubleTurn &&
-        !(shooter === victim && !isBulletLive)
-      ) {
+      // Fixed turn logic based on game rules:
+      // - If bullet is live: turn goes to next alive player
+      // - If bullet is fake: 
+      //   - If shooter shot himself: turn stays the same
+      //   - If shooter shot someone else: turn goes to next player
+      const oldTurn = gameDetails.turn;
+      if (isBulletLive) {
+        // Live bullet - always pass turn to next alive player
+        console.log(`🔄 [TURN] Live bullet - passing turn`);
         decideTurn(roomId);
+      } else {
+        // Fake bullet - only pass turn if shooter shot someone else
+        if (shooter !== victim) {
+          console.log(`🔄 [TURN] Fake bullet on other player - passing turn`);
+          decideTurn(roomId);
+        } else {
+          console.log(`🔄 [TURN] Fake bullet on self - keeping turn`);
+        }
+        // If shooter shot himself with fake bullet, turn stays the same
       }
+      console.log(`🔄 [TURN] Turn changed: ${oldTurn} → ${gameDetails.turn}`);
 
       roomStats[shooter] = {
         ...roomStats[shooter],
@@ -122,25 +171,40 @@ const gameHandler = (socket, rooms, roomName, roomConfig, disconnected) => {
       };
       roomStats[victim] = { ...roomStats[victim], isShielded: false };
 
-      socket.to(roomId).emit("player-shot", {
+      // Send complete player data to ensure synchronization
+      const shotData = {
         isBulletLive,
         shooter,
         victim,
         livesTaken,
         currentTurn: gameDetails.turn,
         playerTurn: Object.keys(roomStats)[gameDetails.turn],
+        victimLives: roomStats[victim].lives,
+        shooterLives: roomStats[shooter].lives,
+        bulletArr: gameDetails.bulletArr
+      };
+
+      console.log(`📤 [BROADCAST] Sending player-shot event to all clients:`, {
+        victim: shotData.victim,
+        victimLives: shotData.victimLives,
+        livesTaken: shotData.livesTaken,
+        isBulletLive: shotData.isBulletLive,
+        currentTurn: shotData.currentTurn,
+        playerTurn: shotData.playerTurn
       });
 
-      socket.emit("player-shot", {
-        isBulletLive,
-        shooter,
-        victim,
-        livesTaken,
-        currentTurn: gameDetails.turn,
-        playerTurn: Object.keys(roomStats)[gameDetails.turn],
-      });
+      socket.to(roomId).emit("player-shot", shotData);
+      socket.emit("player-shot", shotData);
+      
+      console.log(`📊 [AFTER SHOT] Victim lives: ${roomStats[victim].lives}, Shooter lives: ${roomStats[shooter].lives}`);
 
-      if (!checkGameOver(roomId) && gameDetails.bulletArr.length === 0) {
+      // Fixed: Check for game over first, then check if round is over
+      if (checkGameOver(roomId)) {
+        return; // Game is over, don't start new round
+      }
+
+      // Only start new round if bullets are finished AND game is not over
+      if (gameDetails.bulletArr.length === 0) {
         socket.emit("round-over");
         setTimeout(() => startRound({ roomId }), 5000);
       }
@@ -150,24 +214,121 @@ const gameHandler = (socket, rooms, roomName, roomConfig, disconnected) => {
   };
 
   const useEquipment = ({ roomId, player, equipmentType }) => {
+    console.log(`⚙️ [EQUIPMENT EVENT] Player: ${player}, Equipment: ${equipmentType}, Room: ${roomId}`);
+    
     const room = roomName[roomId];
     const effect = effectMap[equipmentType];
 
-    if (!effect) return;
-
-    if (effect === "healing") {
-      room[player].lives += 1;
-    } else {
-      room[player][effect] = true;
+    if (!effect) {
+      console.log(`❌ [EQUIPMENT ERROR] Invalid equipment type: ${equipmentType}`);
+      return;
     }
 
-    socket
-      .to(roomId)
-      .emit("used-equipment", { user: player, equipment: equipmentType });
+    // Check if player has the equipment
+    if (!room[player].equipment || !room[player].equipment[equipmentType] || room[player].equipment[equipmentType] <= 0) {
+      console.log(`❌ [EQUIPMENT ERROR] Player ${player} doesn't have ${equipmentType}`);
+      socket.emit("equipment-error", { message: "You don't have this equipment" });
+      return;
+    }
+
+    console.log(`📦 [EQUIPMENT] Player ${player} has ${room[player].equipment[equipmentType]} ${equipmentType}(s)`);
+
+    // Consume the equipment
+    room[player].equipment[equipmentType] -= 1;
+    console.log(`📦 [EQUIPMENT] Consumed 1 ${equipmentType}, remaining: ${room[player].equipment[equipmentType]}`);
+
+    // Apply equipment effects
+    let equipmentData = {
+      user: player,
+      equipment: equipmentType,
+      equipmentCount: room[player].equipment[equipmentType],
+      lives: room[player].lives,
+      isShielded: room[player].isShielded,
+      hasDoubleDamage: room[player].hasDoubleDamage,
+      canLookBullet: room[player].canLookBullet,
+      hasDoubleTurn: room[player].hasDoubleTurn,
+      // Send complete player state for synchronization
+      playerState: {
+        lives: room[player].lives,
+        isShielded: room[player].isShielded,
+        hasDoubleDamage: room[player].hasDoubleDamage,
+        canLookBullet: room[player].canLookBullet,
+        hasDoubleTurn: room[player].hasDoubleTurn,
+        equipment: { ...room[player].equipment }
+      }
+    };
+
+    if (effect === "healing") {
+      const oldLives = room[player].lives;
+      room[player].lives += 1;
+      equipmentData.lives = room[player].lives;
+      equipmentData.message = `${player} used heal and gained 1 life!`;
+      console.log(`❤️ [HEAL] Player ${player} healed: ${oldLives} → ${room[player].lives} lives`);
+    } else if (equipmentType === "skip") {
+      // Skip turn - move to next alive player
+      const oldTurn = roomConfig[roomId].turn;
+      decideTurn(roomId);
+      equipmentData.message = `${player} used skip turn!`;
+      equipmentData.currentTurn = roomConfig[roomId].turn;
+      equipmentData.playerTurn = Object.keys(room)[roomConfig[roomId].turn];
+      console.log(`⏭️ [SKIP] Turn skipped: ${oldTurn} → ${roomConfig[roomId].turn}`);
+    } else {
+      room[player][effect] = true;
+      equipmentData[effect] = true;
+      equipmentData.message = `${player} used ${equipmentType}!`;
+      console.log(`✨ [EFFECT] Player ${player} activated ${equipmentType}, ${effect}: true`);
+    }
+
+    console.log(`📤 [BROADCAST] Sending used-equipment event to all clients:`, {
+      user: equipmentData.user,
+      equipment: equipmentData.equipment,
+      lives: equipmentData.lives,
+      message: equipmentData.message
+    });
+
+    // Broadcast equipment usage to ALL clients including the user
+    socket.emit("used-equipment", equipmentData);
+    socket.to(roomId).emit("used-equipment", equipmentData);
   };
 
   const handleRotate = ({ rotation, username, roomId }) => {
     socket.to(roomId).emit("rotation", { username, rotation });
+  };
+
+  const lookAtBullet = ({ roomId, player }) => {
+    const gameDetails = roomConfig[roomId];
+    const roomStats = roomName[roomId];
+    
+    // Check if player has looker equipment and can use it
+    if (!roomStats[player].canLookBullet || !roomStats[player].equipment || roomStats[player].equipment.looker <= 0) {
+      socket.emit("equipment-error", { message: "You don't have looker equipment or can't use it" });
+      return;
+    }
+
+    // Check if there are bullets left
+    if (gameDetails.bulletArr.length === 0) {
+      socket.emit("equipment-error", { message: "No bullets left to look at" });
+      return;
+    }
+
+    // Show the next bullet (without removing it)
+    const nextBullet = gameDetails.bulletArr[gameDetails.bulletArr.length - 1];
+    const isLive = nextBullet === 1;
+    
+    // Consume the looker equipment
+    roomStats[player].equipment.looker -= 1;
+    roomStats[player].canLookBullet = false;
+
+    socket.emit("bullet-looked", { 
+      isLive, 
+      player,
+      message: `The next bullet is ${isLive ? 'LIVE' : 'FAKE'}` 
+    });
+    
+    socket.to(roomId).emit("player-used-looker", { 
+      player,
+      message: `${player} used looker equipment` 
+    });
   };
 
   const handleDisconnect = () => {
@@ -201,6 +362,7 @@ const gameHandler = (socket, rooms, roomName, roomConfig, disconnected) => {
   socket.on("start-round", startRound);
   socket.on("shoot-player", shootPlayer);
   socket.on("use-equipment", useEquipment);
+  socket.on("look-bullet", lookAtBullet);
   socket.on("rotate", handleRotate);
   socket.on("disconnect", handleDisconnect);
   socket.on("reconnect-user", handleReconnect);

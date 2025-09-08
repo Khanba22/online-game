@@ -5,13 +5,14 @@ const myPlayerData = createSlice({
   initialState: {
     index:0,
     username: "",
-    lives: 5,
+    lives: 3,
     equipment: {
       shield: 0,
       doubleDamage: 0,
       heals: 0,
       looker: 0,
       doubleTurn: 0,
+      skip: 0,
     },
     isShielded: false,
     hasDoubleDamage: false,
@@ -100,6 +101,14 @@ const myPlayerData = createSlice({
             },
             lives: state.lives + 1,
           };
+        case "skip":
+          return {
+            ...state,
+            equipment: {
+              ...state.equipment,
+              skip: state.equipment.skip - 1,
+            },
+          };
         default:
           return { ...state };
       }
@@ -110,18 +119,10 @@ const myPlayerData = createSlice({
         username: action.payload.username,
       };
     },
-    reduceMyLife: (state, action) => {
-      const liveCount = action.payload.liveCount || 0;
-      const currentLives = state.lives || 0;
-      const newLives = Math.max(0, currentLives - liveCount);
-      
-      return {
-        ...state,
-        lives: newLives,
-      };
-    },
+    // Removed reduceMyLife - all life updates now go through server events
+    // Lives are updated via reduceLife in AllPlayerReducer based on server data
   },
 });
-export const { setPlayer, useEquipment, addEquipment, setName , reduceMyLife } =
+export const { setPlayer, useEquipment, addEquipment, setName } =
   myPlayerData.actions;
 export default myPlayerData.reducer;

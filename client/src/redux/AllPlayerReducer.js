@@ -5,13 +5,14 @@ const OtherPlayerData = createSlice({
   initialState: {
     user: {
       username: "",
-      lives: 5,
+      lives: 3,
       equipment: {
         shield: 0,
         doubleDamage: 0,
         heals: 0,
         looker: 0,
         doubleTurn: 0,
+        skip: 0,
       },
       isShielded: false,
       hasDoubleDamage: false,
@@ -41,7 +42,8 @@ const OtherPlayerData = createSlice({
     },
     reduceLife: (state, action) => {
       const user = action.payload.user;
-      const liveCount = action.payload.liveCount || 0;
+      const lives = action.payload.lives;
+      const liveCount = action.payload.liveCount;
       
       // Ensure user exists in state
       if (!state[user]) {
@@ -49,8 +51,17 @@ const OtherPlayerData = createSlice({
         return state;
       }
       
-      const currentLives = state[user].lives || 0;
-      const newLives = Math.max(0, currentLives - liveCount);
+      // Use server-provided life count if available (authoritative)
+      let newLives;
+      if (lives !== undefined) {
+        newLives = Math.max(0, lives);
+      } else if (liveCount !== undefined) {
+        // Fallback to old logic for backward compatibility
+        const currentLives = state[user].lives || 0;
+        newLives = Math.max(0, currentLives - liveCount);
+      } else {
+        return state; // No valid life data
+      }
       
       if (newLives === 0) {
         console.log(`${user} Died`);
@@ -65,7 +76,37 @@ const OtherPlayerData = createSlice({
       };
     },
     usePlayerEquipment: (state, action) => {
-      const { user, equipmentType } = action.payload;
+      const { 
+        user, 
+        equipmentType, 
+        equipmentCount, 
+        lives, 
+        isShielded, 
+        hasDoubleDamage, 
+        canLookBullet, 
+        hasDoubleTurn 
+      } = action.payload;
+
+      // If we have server-synced data, use it directly
+      if (equipmentCount !== undefined) {
+        return {
+          ...state,
+          [user]: {
+            ...state[user],
+            equipment: {
+              ...state[user].equipment,
+              [equipmentType]: equipmentCount,
+            },
+            lives: lives !== undefined ? lives : state[user].lives,
+            isShielded: isShielded !== undefined ? isShielded : state[user].isShielded,
+            hasDoubleDamage: hasDoubleDamage !== undefined ? hasDoubleDamage : state[user].hasDoubleDamage,
+            canLookBullet: canLookBullet !== undefined ? canLookBullet : state[user].canLookBullet,
+            hasDoubleTurn: hasDoubleTurn !== undefined ? hasDoubleTurn : state[user].hasDoubleTurn,
+          },
+        };
+      }
+
+      // Fallback to old logic if no server data
       var effect = "";
       switch (equipmentType) {
         case "shield":
@@ -83,9 +124,22 @@ const OtherPlayerData = createSlice({
         case "doubleTurn":
           effect = "hasDoubleTurn";
           break;
+        case "skip":
+          // Skip doesn't set any effect, just consumes equipment
+          return {
+            ...state,
+            [user]: {
+              ...state[user],
+              equipment: {
+                ...state[user].equipment,
+                [equipmentType]: state[user].equipment[equipmentType] - 1,
+              },
+            },
+          };
         default:
           return state;
       }
+      
       if (effect === "healing") {
         return {
           ...state,
@@ -99,6 +153,7 @@ const OtherPlayerData = createSlice({
           },
         };
       }
+      
       return {
         ...state,
         [user]: {
