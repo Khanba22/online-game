@@ -97,6 +97,7 @@ const RaycasterComponent = ({ camera, isLocked }) => {
         setTimeout(() => toast.info("Starting Next Round"), 2000);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [isLocked, myData.username, roomId, timeBuffer, ws, playerTurn, isTargeting, targetedPlayer]
   );
 
@@ -133,14 +134,15 @@ const RaycasterComponent = ({ camera, isLocked }) => {
     const intersects = raycaster.current.intersectObjects(scene.children, true);
 
     let foundValidIntersection = false;
-    let currentTarget = null;
+    // let currentTarget = null;
 
     for (const intersect of intersects) {
       const intersected = intersect.object.parent;
 
       if (intersected.userData && intersected.userData.username) {
         foundValidIntersection = true;
-        currentTarget = intersected.userData.username;
+        // currentTarget = intersected.userData.username;
+        console.log(`🎯 [TARGET] Found valid intersection with ${intersected.userData.username}`);
 
         // Update targeting state
         if (intersected.userData.username !== targetedPlayer) {

@@ -43,6 +43,44 @@ const PlayerList = ({ playerData, myData, currentPlayer }) => {
     }
   };
 
+  const getEquipmentStatusIcons = (player) => {
+    const icons = [];
+    
+    if (player.isShielded) {
+      icons.push(
+        <span key="shield" className="text-blue-400" title="Shielded">
+          🛡️
+        </span>
+      );
+    }
+    
+    if (player.hasDoubleDamage) {
+      icons.push(
+        <span key="double-damage" className="text-red-400" title="Double Damage">
+          ⚡
+        </span>
+      );
+    }
+    
+    if (player.canLookBullet) {
+      icons.push(
+        <span key="looker" className="text-purple-400" title="Can Look Bullet">
+          👁️
+        </span>
+      );
+    }
+    
+    if (player.hasDoubleTurn) {
+      icons.push(
+        <span key="double-turn" className="text-yellow-400" title="Double Turn">
+          🔄
+        </span>
+      );
+    }
+    
+    return icons;
+  };
+
   return (
     <div className="bg-black bg-opacity-80 backdrop-blur-sm border border-red-500 rounded-lg p-4 min-w-64">
       <h3 className="text-white text-lg font-bold mb-4 foldit-bold">Players</h3>
@@ -79,6 +117,9 @@ const PlayerList = ({ playerData, myData, currentPlayer }) => {
                   <span className={`font-semibold ${isMe ? 'text-blue-400' : 'text-white'}`}>
                     {player.username} {isMe && '(You)'}
                   </span>
+                  <div className="flex items-center space-x-1">
+                    {getEquipmentStatusIcons(player)}
+                  </div>
                 </div>
                 <span className={`text-xs font-bold ${getStatusColor(status)}`}>
                   {getStatusText(status)}
@@ -89,9 +130,22 @@ const PlayerList = ({ playerData, myData, currentPlayer }) => {
                 <div className="flex items-center space-x-1">
                   {renderHearts(player.lives)}
                 </div>
-                <span className="text-xs text-gray-400">
-                  {player.lives} lives
-                </span>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-gray-400">
+                    {player.lives} lives
+                  </span>
+                  {player.equipment && (
+                    <div className="flex items-center space-x-1 text-xs">
+                      {Object.entries(player.equipment).map(([eq, count]) => 
+                        count > 0 ? (
+                          <span key={eq} className="text-gray-300" title={eq}>
+                            {eq.charAt(0).toUpperCase()}:{count}
+                          </span>
+                        ) : null
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           );

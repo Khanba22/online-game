@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
-import { addEquipment, setPlayer } from '../redux/PlayerDataReducer';
+import { addEquipment, setPlayer, updatePlayerEquipment } from '../redux/PlayerDataReducer';
 import { reduceLife, usePlayerEquipment, setOtherPlayer } from '../redux/AllPlayerReducer';
 import { updateGameTurn, setBulletArr } from '../redux/GameConfig';
 
@@ -193,6 +193,8 @@ export const useGameEvents = (ws, username) => {
       // Use complete player state from server if available
       if (playerState) {
         console.log(`📦 [CLIENT] Using complete player state from server:`, playerState);
+        
+        // Update other players
         dispatch({
           type: `${usePlayerEquipment}`,
           payload: { 
@@ -206,6 +208,22 @@ export const useGameEvents = (ws, username) => {
             hasDoubleTurn: playerState.hasDoubleTurn
           },
         });
+
+        // Update current player if it's them using equipment
+        if (user === username) {
+          dispatch({
+            type: `${updatePlayerEquipment}`,
+            payload: { 
+              equipmentType: equipment,
+              equipmentCount: playerState.equipment[equipment],
+              lives: playerState.lives,
+              isShielded: playerState.isShielded,
+              hasDoubleDamage: playerState.hasDoubleDamage,
+              canLookBullet: playerState.canLookBullet,
+              hasDoubleTurn: playerState.hasDoubleTurn
+            },
+          });
+        }
       } else {
         console.log(`📦 [CLIENT] Using individual properties (fallback)`);
         // Fallback to individual properties
@@ -234,13 +252,24 @@ export const useGameEvents = (ws, username) => {
 
       // Show equipment usage message
       if (message) {
-        toast.success(message);
+        if (equipment === "looker") {
+          // Special handling for looker - show bullet status
+          toast.info(`🔍 ${message}`, {
+            autoClose: 5000,
+            style: {
+              background: data.isLive ? '#ff6b6b' : '#4ecdc4',
+              color: 'white'
+            }
+          });
+        } else {
+          toast.success(message);
+        }
       }
     } catch (error) {
       console.error('Error handling equipment usage:', error);
       setGameError('Failed to process equipment usage');
     }
-  }, [dispatch]);
+  }, [dispatch, username]);
 
   // Handle looker equipment usage
   const bulletLooked = useCallback((data) => {
@@ -283,7 +312,19 @@ export const useGameEvents = (ws, username) => {
       ws.on("player-used-looker", playerUsedLooker);
       ws.on("equipment-error", (error) => {
         console.error('Equipment error:', error);
-        toast.error(error.message || 'Equipment usage failed');
+        const errorMessage = error.error || error.message || 'Equipment usage failed';
+        
+        // Show user-friendly error message
+        if (errorMessage.includes('not available') || errorMessage.includes('Equipment not available')) {
+          toast.warn('Equipment not available - you may have already used it');
+        } else if (errorMessage.includes('not found')) {
+          toast.error('Player not found - please refresh and try again');
+        } else {
+          toast.error(`Equipment Error: ${errorMessage}`);
+        }
+        
+        // Don't set game error for equipment issues - they're not critical
+        console.warn('Equipment usage failed:', errorMessage);
       });
       ws.on("error", (error) => {
         console.error('Socket error:', error);

@@ -1,6 +1,5 @@
 import React from 'react';
 import EquipmentBar from '../three/UIComponents/EquipmentBar';
-import Stats from '../three/UIComponents/Stats';
 import SettingsTab from './SettingsTab';
 import PlayerList from './PlayerList';
 import GameStatus from './GameStatus';
@@ -51,14 +50,6 @@ const GameHUD = ({
         </div>
         
         {/* Stats Bar */}
-        <div className="bg-black bg-opacity-80 backdrop-blur-sm border-t border-red-500">
-          <Stats 
-            turn={turn} 
-            lives={lives} 
-            playerTurn={playerTurn} 
-            round={round} 
-          />
-        </div>
       </div>
 
       {/* Crosshair overlay */}

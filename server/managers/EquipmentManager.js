@@ -23,9 +23,23 @@ class EquipmentManager {
 
     const playerData = this.roomManager.roomNames[normalizedRoomId][player];
     
+    // Debug player data structure
+    console.log(`🔍 [DEBUG] Player data for ${player}:`, {
+      hasPlayerData: !!playerData,
+      equipments: playerData?.equipments,
+      equipmentType: equipmentType,
+      equipmentCount: playerData?.equipments?.[equipmentType]
+    });
+    
+    // Check if player exists
+    if (!playerData) {
+      console.log(`❌ [EQUIPMENT ERROR] Player ${player} not found in room ${normalizedRoomId}`);
+      throw createError(errorTypes.INVALID_PLAYER, 'Player not found');
+    }
+    
     // Check if player has the equipment
     if (!playerData.equipments || !playerData.equipments[equipmentType] || playerData.equipments[equipmentType] <= 0) {
-      console.log(`❌ [EQUIPMENT ERROR] Player ${player} doesn't have ${equipmentType}`);
+      console.log(`❌ [EQUIPMENT ERROR] Player ${player} doesn't have ${equipmentType}. Available:`, playerData.equipments);
       throw createError(errorTypes.INVALID_EQUIPMENT, 'Equipment not available');
     }
 
@@ -75,6 +89,25 @@ class EquipmentManager {
       equipmentData.skipTurn = true; // Flag for RoundManager to handle
       equipmentData.skipCount = 1; // Track number of skips used
       console.log(`⏭️ [SKIP] Player ${player} used skip turn`);
+    } else if (equipmentType === "looker") {
+      // Special handling for looker - both activate effect and check bullet
+      playerData[effect] = true;
+      equipmentData[effect] = true;
+      equipmentData.playerState[effect] = true;
+      
+      // Check bullet status
+      const roomConfig = this.roomManager.getRoomConfig(normalizedRoomId);
+      if (roomConfig.bulletArr.length > 0) {
+        const nextBullet = roomConfig.bulletArr[roomConfig.bulletArr.length - 1];
+        const bulletType = nextBullet === 1 ? 'Live' : 'Fake';
+        equipmentData.message = `${player} used looker! Next bullet is ${bulletType}!`;
+        equipmentData.bulletType = bulletType;
+        equipmentData.isLive = nextBullet === 1;
+        console.log(`👁️ [LOOKER] Player ${player} looked at bullet: ${bulletType}`);
+      } else {
+        equipmentData.message = `${player} used looker! No bullets left to look at.`;
+        console.log(`👁️ [LOOKER] Player ${player} used looker but no bullets available`);
+      }
     } else {
       playerData[effect] = true;
       equipmentData[effect] = true;

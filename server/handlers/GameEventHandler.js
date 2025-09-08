@@ -71,6 +71,12 @@ class GameEventHandler {
     try {
       console.log(`⚙️ [GAME HANDLER] Processing equipment: ${player} using ${equipmentType} in room ${roomId}`);
       const normalizedRoomId = roomId.toLowerCase();
+      
+      // Debug room and player existence
+      console.log(`🔍 [DEBUG] Room exists: ${!!this.roomManager.rooms[normalizedRoomId]}`);
+      console.log(`🔍 [DEBUG] Room names exists: ${!!this.roomManager.roomNames[normalizedRoomId]}`);
+      console.log(`🔍 [DEBUG] Player exists: ${!!this.roomManager.roomNames[normalizedRoomId]?.[player]}`);
+      
       const equipmentData = this.equipmentManager.useEquipment(normalizedRoomId, player, equipmentType);
       
       // Handle skip turn if it's a skip equipment
@@ -81,36 +87,38 @@ class GameEventHandler {
         equipmentData.skipCount = turnData.skipCount;
       }
       
+      // Get updated player data after equipment usage
+      const updatedPlayerData = this.roomManager.getPlayerState(normalizedRoomId, player);
+      equipmentData.playerState = updatedPlayerData;
+      
       console.log(`📤 [GAME HANDLER] Broadcasting used-equipment to room ${normalizedRoomId}:`, {
         user: equipmentData.user,
         equipment: equipmentData.equipment,
         lives: equipmentData.lives,
-        message: equipmentData.message
+        message: equipmentData.message,
+        playerState: equipmentData.playerState
       });
       
       socket.to(normalizedRoomId).emit("used-equipment", equipmentData);
       socket.emit("used-equipment", equipmentData);
     } catch (error) {
+      console.error(`❌ [GAME HANDLER] Equipment error for ${player} using ${equipmentType}:`, error);
+      console.error(`❌ [GAME HANDLER] Error details:`, {
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      });
       handleSocketError(socket, error, 'equipment-error');
     }
   }
 
   handleLookBullet(socket, { roomId, player }) {
-    try {
-      console.log(`👁️ [GAME HANDLER] Processing look-bullet: ${player} in room ${roomId}`);
-      const normalizedRoomId = roomId.toLowerCase();
-      const lookData = this.equipmentManager.lookAtBullet(normalizedRoomId, player);
-      
-      console.log(`📤 [GAME HANDLER] Broadcasting bullet-looked to ${player}:`, lookData);
-      
-      socket.emit("bullet-looked", lookData);
-      socket.to(normalizedRoomId).emit("player-used-looker", {
-        player,
-        message: `${player} used looker!`
-      });
-    } catch (error) {
-      handleSocketError(socket, error, 'looker-error');
-    }
+    // DEPRECATED: Looker equipment now handled via use-equipment
+    console.log(`⚠️ [DEPRECATED] look-bullet event received - use use-equipment instead`);
+    handleSocketError(socket, 
+      new Error('look-bullet event is deprecated. Use use-equipment with equipmentType: "looker" instead'), 
+      'looker-error'
+    );
   }
 
   handleRotate(socket, { rotation, username, roomId }) {

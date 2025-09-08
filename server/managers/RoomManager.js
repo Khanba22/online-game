@@ -187,7 +187,7 @@ class RoomManager {
   validateRoom(roomId) {
     // Normalize room ID to lowercase for consistent matching
     const normalizedRoomId = roomId.toLowerCase();
-    if (!this.rooms[normalizedRoomId]) {
+    if (!this.rooms[normalizedRoomId] || !this.roomNames[normalizedRoomId]) {
       throw createError(errorTypes.ROOM_NOT_FOUND, 'Room not found');
     }
     return normalizedRoomId;
@@ -240,6 +240,15 @@ class RoomManager {
       return true;
     }
     return false;
+  }
+
+  // Get player state
+  getPlayerState(roomId, username) {
+    const normalizedRoomId = this.validateRoom(roomId);
+    if (this.roomNames[normalizedRoomId] && this.roomNames[normalizedRoomId][username]) {
+      return { ...this.roomNames[normalizedRoomId][username] };
+    }
+    return null;
   }
 }
 

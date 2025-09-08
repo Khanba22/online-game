@@ -87,9 +87,19 @@ const OtherPlayerData = createSlice({
         hasDoubleTurn 
       } = action.payload;
 
+      console.log(`🔄 [REDUX] usePlayerEquipment for ${user}:`, {
+        equipmentType,
+        equipmentCount,
+        lives,
+        isShielded,
+        hasDoubleDamage,
+        canLookBullet,
+        hasDoubleTurn
+      });
+
       // If we have server-synced data, use it directly
       if (equipmentCount !== undefined) {
-        return {
+        const updatedState = {
           ...state,
           [user]: {
             ...(state[user] || {}),
@@ -104,6 +114,9 @@ const OtherPlayerData = createSlice({
             hasDoubleTurn: hasDoubleTurn !== undefined ? hasDoubleTurn : (state[user]?.hasDoubleTurn || false),
           },
         };
+        
+        console.log(`✅ [REDUX] Updated player ${user} state:`, updatedState[user]);
+        return updatedState;
       }
 
       // Fallback to old logic if no server data

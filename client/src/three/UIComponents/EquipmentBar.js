@@ -1,4 +1,4 @@
-import React, { useContext, useState, useCallback } from "react";
+import React, { useContext, useState, useCallback, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { RoomContext } from "../../contexts/socketContext";
 import "./EquipmentBar.css";
@@ -13,8 +13,9 @@ const EquipmentBar = () => {
   const [isUsingEquipment, setIsUsingEquipment] = useState(false);
 
   const handleEquipmentUse = useCallback(async (eq) => {
-    const equipmentCount = equipment[eq] || 0;
-    if (isUsingEquipment || equipmentCount === 0) return;
+    // Only check if already using equipment (prevent double-clicks)
+    // Let server handle equipment availability validation
+    if (isUsingEquipment) return;
 
     try {
       setIsUsingEquipment(true);
@@ -22,32 +23,57 @@ const EquipmentBar = () => {
       // Play equipment sound
       playSound("/sounds/gun_load.mp3", { volume: 0.3 });
 
+      // Get normalized room ID
+      const normalizedRoomId = roomId?.toLowerCase();
+
+      // Validate data before sending
+      if (!normalizedRoomId) {
+        console.error('❌ [CLIENT] No room ID available');
+        toast.error('No room ID available');
+        return;
+      }
+      
+      if (!username) {
+        console.error('❌ [CLIENT] No username available');
+        toast.error('No username available');
+        return;
+      }
+
       // Handle special equipment effects
       if (eq === "looker") {
-        // For looker, emit to server to get bullet status
-        const normalizedRoomId = roomId?.toLowerCase();
-        ws.emit("look-bullet", {
+        // For looker, only emit use-equipment (not look-bullet)
+        // The server will handle both the equipment consumption and bullet checking
+        console.log(`⚙️ [CLIENT] Using looker equipment:`, {
           roomId: normalizedRoomId,
+          equipmentType: eq,
+          player: username,
+          currentEquipment: equipment
+        });
+        
+        ws.emit("use-equipment", {
+          roomId: normalizedRoomId,
+          equipmentType: eq,
           player: username,
         });
       } else {
+        // For other equipment, show activation message and emit use-equipment
         toast.success(`✨ ${eq} activated!`, {
           autoClose: 2000
         });
+        
+        console.log(`⚙️ [CLIENT] Emitting use-equipment event:`, {
+          roomId: normalizedRoomId,
+          equipmentType: eq,
+          player: username,
+          currentEquipment: equipment
+        });
+        
+        ws.emit("use-equipment", {
+          roomId: normalizedRoomId,
+          equipmentType: eq,
+          player: username,
+        });
       }
-
-      // Emit to server - server will handle equipment consumption and broadcast to all clients
-      const normalizedRoomId = roomId?.toLowerCase();
-      console.log(`⚙️ [CLIENT] Emitting use-equipment event:`, {
-        roomId: normalizedRoomId,
-        equipmentType: eq,
-        player: username
-      });
-      ws.emit("use-equipment", {
-        roomId: normalizedRoomId,
-        equipmentType: eq,
-        player: username,
-      });
 
       // Don't update local state here - wait for server response via used-equipment event
       // This prevents double consumption of equipment
@@ -77,14 +103,16 @@ const EquipmentBar = () => {
       {equipment &&
         Object.keys(equipment).map((eq, i) => {
           const equipmentCount = equipment[eq] || 0;
-          const isDisabled = equipmentCount === 0 || isUsingEquipment;
+          // Only disable if currently using equipment (prevent double-clicks)
+          // Server will handle equipment availability validation
+          const isDisabled = isUsingEquipment;
           return (
             <div key={eq} className="equipment-item">
               <button
                 className={`equipment-button ${isUsingEquipment ? 'using' : ''}`}
                 disabled={isDisabled}
                 onClick={() => handleEquipmentUse(eq)}
-                title={getEquipmentDescription(eq)}
+                title={`${getEquipmentDescription(eq)} (${equipmentCount} available)`}
               >
                 <img src={`/assets/${eq}.png`} alt={eq} />
                 <span className="equipment-count">{equipmentCount}</span>

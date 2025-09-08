@@ -119,10 +119,44 @@ const myPlayerData = createSlice({
         username: action.payload.username,
       };
     },
+    updatePlayerEquipment: (state, action) => {
+      const { 
+        equipmentType, 
+        equipmentCount, 
+        lives, 
+        isShielded, 
+        hasDoubleDamage, 
+        canLookBullet, 
+        hasDoubleTurn 
+      } = action.payload;
+
+      console.log(`🔄 [REDUX] updatePlayerEquipment:`, {
+        equipmentType,
+        equipmentCount,
+        lives,
+        isShielded,
+        hasDoubleDamage,
+        canLookBullet,
+        hasDoubleTurn
+      });
+
+      return {
+        ...state,
+        equipment: {
+          ...state.equipment,
+          [equipmentType]: equipmentCount !== undefined ? equipmentCount : state.equipment[equipmentType],
+        },
+        lives: lives !== undefined ? lives : state.lives,
+        isShielded: isShielded !== undefined ? isShielded : state.isShielded,
+        hasDoubleDamage: hasDoubleDamage !== undefined ? hasDoubleDamage : state.hasDoubleDamage,
+        canLookBullet: canLookBullet !== undefined ? canLookBullet : state.canLookBullet,
+        hasDoubleTurn: hasDoubleTurn !== undefined ? hasDoubleTurn : state.hasDoubleTurn,
+      };
+    },
     // Removed reduceMyLife - all life updates now go through server events
     // Lives are updated via reduceLife in AllPlayerReducer based on server data
   },
 });
-export const { setPlayer, useEquipment, addEquipment, setName } =
+export const { setPlayer, useEquipment, addEquipment, setName, updatePlayerEquipment } =
   myPlayerData.actions;
 export default myPlayerData.reducer;
