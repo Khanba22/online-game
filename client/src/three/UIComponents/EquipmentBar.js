@@ -12,6 +12,19 @@ const EquipmentBar = () => {
   const { playSound } = useAudio();
   const [isUsingEquipment, setIsUsingEquipment] = useState(false);
 
+  // Reset equipment usage state when there's an error
+  useEffect(() => {
+    const handleEquipmentError = () => {
+      setIsUsingEquipment(false);
+    };
+
+    ws.on("equipment-error", handleEquipmentError);
+    
+    return () => {
+      ws.off("equipment-error", handleEquipmentError);
+    };
+  }, [ws]);
+
   const handleEquipmentUse = useCallback(async (eq) => {
     // Only check if already using equipment (prevent double-clicks)
     // Let server handle equipment availability validation
@@ -39,41 +52,18 @@ const EquipmentBar = () => {
         return;
       }
 
-      // Handle special equipment effects
-      if (eq === "looker") {
-        // For looker, only emit use-equipment (not look-bullet)
-        // The server will handle both the equipment consumption and bullet checking
-        console.log(`⚙️ [CLIENT] Using looker equipment:`, {
-          roomId: normalizedRoomId,
-          equipmentType: eq,
-          player: username,
-          currentEquipment: equipment
-        });
-        
-        ws.emit("use-equipment", {
-          roomId: normalizedRoomId,
-          equipmentType: eq,
-          player: username,
-        });
-      } else {
-        // For other equipment, show activation message and emit use-equipment
-        toast.success(`✨ ${eq} activated!`, {
-          autoClose: 2000
-        });
-        
-        console.log(`⚙️ [CLIENT] Emitting use-equipment event:`, {
-          roomId: normalizedRoomId,
-          equipmentType: eq,
-          player: username,
-          currentEquipment: equipment
-        });
-        
-        ws.emit("use-equipment", {
-          roomId: normalizedRoomId,
-          equipmentType: eq,
-          player: username,
-        });
-      }
+      // Emit specific equipment event based on type
+      const equipmentEvent = `use-${eq}`;
+      console.log(`⚙️ [CLIENT] Emitting ${equipmentEvent} event:`, {
+        roomId: normalizedRoomId,
+        player: username,
+        currentEquipment: equipment
+      });
+      
+      ws.emit(equipmentEvent, {
+        roomId: normalizedRoomId,
+        player: username,
+      });
 
       // Don't update local state here - wait for server response via used-equipment event
       // This prevents double consumption of equipment
@@ -103,9 +93,8 @@ const EquipmentBar = () => {
       {equipment &&
         Object.keys(equipment).map((eq, i) => {
           const equipmentCount = equipment[eq] || 0;
-          // Only disable if currently using equipment (prevent double-clicks)
-          // Server will handle equipment availability validation
-          const isDisabled = isUsingEquipment;
+          // Disable if no equipment available OR currently using equipment
+          const isDisabled = equipmentCount === 0 || isUsingEquipment;
           return (
             <div key={eq} className="equipment-item">
               <button

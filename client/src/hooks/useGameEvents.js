@@ -193,6 +193,8 @@ export const useGameEvents = (ws, username) => {
       // Use complete player state from server if available
       if (playerState) {
         console.log(`📦 [CLIENT] Using complete player state from server:`, playerState);
+        console.log(`📦 [CLIENT] Equipment data:`, playerState.equipments);
+        console.log(`📦 [CLIENT] Equipment type: ${equipment}, Count: ${playerState.equipments?.[equipment]}`);
         
         // Update other players
         dispatch({
@@ -200,7 +202,7 @@ export const useGameEvents = (ws, username) => {
           payload: { 
             user, 
             equipmentType: equipment,
-            equipmentCount: playerState.equipment[equipment],
+            equipmentCount: playerState.equipments[equipment],
             lives: playerState.lives,
             isShielded: playerState.isShielded,
             hasDoubleDamage: playerState.hasDoubleDamage,
@@ -215,7 +217,7 @@ export const useGameEvents = (ws, username) => {
             type: `${updatePlayerEquipment}`,
             payload: { 
               equipmentType: equipment,
-              equipmentCount: playerState.equipment[equipment],
+              equipmentCount: playerState.equipments[equipment],
               lives: playerState.lives,
               isShielded: playerState.isShielded,
               hasDoubleDamage: playerState.hasDoubleDamage,
@@ -267,7 +269,12 @@ export const useGameEvents = (ws, username) => {
       }
     } catch (error) {
       console.error('Error handling equipment usage:', error);
-      setGameError('Failed to process equipment usage');
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        data: data
+      });
+      setGameError(`Failed to process equipment usage: ${error.message}`);
     }
   }, [dispatch, username]);
 
@@ -310,6 +317,14 @@ export const useGameEvents = (ws, username) => {
       ws.on("used-equipment", usedEquipment);
       ws.on("bullet-looked", bulletLooked);
       ws.on("player-used-looker", playerUsedLooker);
+      
+      // Individual equipment event handlers
+      ws.on("used-shield", usedEquipment);
+      ws.on("used-doubleDamage", usedEquipment);
+      ws.on("used-heals", usedEquipment);
+      ws.on("used-looker", usedEquipment);
+      ws.on("used-doubleTurn", usedEquipment);
+      ws.on("used-skip", usedEquipment);
       ws.on("equipment-error", (error) => {
         console.error('Equipment error:', error);
         const errorMessage = error.error || error.message || 'Equipment usage failed';
@@ -338,6 +353,15 @@ export const useGameEvents = (ws, username) => {
         ws.off("used-equipment", usedEquipment);
         ws.off("bullet-looked", bulletLooked);
         ws.off("player-used-looker", playerUsedLooker);
+        
+        // Individual equipment event cleanup
+        ws.off("used-shield", usedEquipment);
+        ws.off("used-doubleDamage", usedEquipment);
+        ws.off("used-heals", usedEquipment);
+        ws.off("used-looker", usedEquipment);
+        ws.off("used-doubleTurn", usedEquipment);
+        ws.off("used-skip", usedEquipment);
+        
         ws.off("equipment-error");
         ws.off("error");
       };
