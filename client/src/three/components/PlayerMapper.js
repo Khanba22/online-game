@@ -8,11 +8,24 @@ import { Text, Billboard } from "@react-three/drei"; // Import Text and Billboar
 const PlayerMapper = ({ playerData, turn, camera, username }) => {
   const { playerTurn } = useSelector((state) => state.gameConfig);
 
+  console.log('🎮 [PLAYER MAPPER] Rendering players:', playerData);
+  console.log('🎮 [PLAYER MAPPER] My username:', username);
+  console.log('🎮 [PLAYER MAPPER] Player turn:', playerTurn);
+
   return (
     <Suspense fallback={null}>
       {playerData.map((player, i) => {
         const isMe = player.username === username;
         const isMyTurn = player.username === playerTurn;
+        
+        console.log(`🎮 [PLAYER MAPPER] Player: ${player.username}, isMe: ${isMe}, isMyTurn: ${isMyTurn}, playerTurn: "${playerTurn}"`);
+        
+        // Safety checks for position data
+        if (!player.position || !player.cameraOffset) {
+          console.warn(`Player ${player.username} missing position data:`, player);
+          return null;
+        }
+        
         const labelPosition = [
           player.position[0],
           player.cameraOffset[1] + 0.1, // Adjust label position above the player's head

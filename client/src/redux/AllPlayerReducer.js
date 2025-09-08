@@ -70,7 +70,7 @@ const OtherPlayerData = createSlice({
       return {
         ...state,
         [user]: {
-          ...state[user],
+          ...(state[user] || {}),
           lives: newLives,
         },
       };
@@ -92,16 +92,16 @@ const OtherPlayerData = createSlice({
         return {
           ...state,
           [user]: {
-            ...state[user],
+            ...(state[user] || {}),
             equipment: {
-              ...state[user].equipment,
+              ...(state[user]?.equipment || {}),
               [equipmentType]: equipmentCount,
             },
-            lives: lives !== undefined ? lives : state[user].lives,
-            isShielded: isShielded !== undefined ? isShielded : state[user].isShielded,
-            hasDoubleDamage: hasDoubleDamage !== undefined ? hasDoubleDamage : state[user].hasDoubleDamage,
-            canLookBullet: canLookBullet !== undefined ? canLookBullet : state[user].canLookBullet,
-            hasDoubleTurn: hasDoubleTurn !== undefined ? hasDoubleTurn : state[user].hasDoubleTurn,
+            lives: lives !== undefined ? lives : (state[user]?.lives || 3),
+            isShielded: isShielded !== undefined ? isShielded : (state[user]?.isShielded || false),
+            hasDoubleDamage: hasDoubleDamage !== undefined ? hasDoubleDamage : (state[user]?.hasDoubleDamage || false),
+            canLookBullet: canLookBullet !== undefined ? canLookBullet : (state[user]?.canLookBullet || false),
+            hasDoubleTurn: hasDoubleTurn !== undefined ? hasDoubleTurn : (state[user]?.hasDoubleTurn || false),
           },
         };
       }
@@ -129,10 +129,10 @@ const OtherPlayerData = createSlice({
           return {
             ...state,
             [user]: {
-              ...state[user],
+              ...(state[user] || {}),
               equipment: {
-                ...state[user].equipment,
-                [equipmentType]: state[user].equipment[equipmentType] - 1,
+                ...(state[user]?.equipment || {}),
+                [equipmentType]: (state[user]?.equipment?.[equipmentType] || 0) - 1,
               },
             },
           };
@@ -154,17 +154,17 @@ const OtherPlayerData = createSlice({
         };
       }
       
-      return {
-        ...state,
-        [user]: {
-          ...state[user],
-          equipment: {
-            ...state[user].equipment,
-            [equipmentType]: state[user].equipment[equipmentType] - 1,
+        return {
+          ...state,
+          [user]: {
+            ...(state[user] || {}),
+            equipment: {
+              ...(state[user]?.equipment || {}),
+              [equipmentType]: (state[user]?.equipment?.[equipmentType] || 0) - 1,
+            },
+            [effect]: true,
           },
-          [effect]: true,
-        },
-      };
+        };
     },
   },
 });

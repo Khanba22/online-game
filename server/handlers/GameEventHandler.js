@@ -4,20 +4,26 @@ const EquipmentManager = require('../managers/EquipmentManager');
 const RoundManager = require('../managers/RoundManager');
 
 class GameEventHandler {
-  constructor() {
-    this.roomManager = new RoomManager();
-    this.equipmentManager = new EquipmentManager(this.roomManager);
-    this.roundManager = new RoundManager(this.roomManager, this.equipmentManager);
+  constructor(roomManager, equipmentManager, roundManager) {
+    this.roomManager = roomManager;
+    this.equipmentManager = equipmentManager;
+    this.roundManager = roundManager;
   }
 
   handleStartRound(socket, { roomId }) {
     try {
+      console.log(`🎮 [GAME HANDLER] Starting round for room: ${roomId}`);
+      console.log(`🎮 [GAME HANDLER] Available rooms:`, Object.keys(this.roomManager.rooms));
+      
       const normalizedRoomId = roomId.toLowerCase();
+      console.log(`🎮 [GAME HANDLER] Normalized room ID: ${normalizedRoomId}`);
+      
       const roundData = this.roundManager.startRound(normalizedRoomId);
       
       socket.emit("round-started", roundData);
       socket.to(normalizedRoomId).emit("round-started", roundData);
     } catch (error) {
+      console.error(`🎮 [GAME HANDLER] Error starting round:`, error);
       handleSocketError(socket, error, 'round-start-error');
     }
   }

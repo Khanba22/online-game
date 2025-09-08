@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { RoomContext } from "../contexts/socketContext";
 import MainCanvas from "../three/Pages/MainCanvas";
 import { useSelector } from "react-redux";
@@ -19,6 +19,17 @@ const GamePage = () => {
   // Use custom hooks
   const { gameError: eventsError, setGameError: setEventsError } = useGameEvents(ws, username);
   const { isLoading, gameError: controlsError, startNextRound, clearError } = useGameControls(ws, roomId);
+
+  // Auto-start the first round when the game page loads
+  useEffect(() => {
+    if (ws && roomId && isAdmin) {
+      const normalizedRoomId = roomId?.toLowerCase();
+      console.log('🎮 [GAME PAGE] Auto-starting first round...');
+      console.log('🎮 [GAME PAGE] Room ID:', normalizedRoomId);
+      console.log('🎮 [GAME PAGE] Is Admin:', isAdmin);
+      ws.emit("start-round", { roomId: normalizedRoomId });
+    }
+  }, [ws, roomId, isAdmin]);
 
   // Combine errors
   const gameError = eventsError || controlsError;

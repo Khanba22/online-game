@@ -3,8 +3,8 @@ import React from 'react';
 const PlayerList = ({ playerData, myData, currentPlayer }) => {
   const players = Object.values(playerData || {});
   // Filter out myData from players to avoid duplicates
-  const otherPlayers = players.filter(player => player.username !== myData.username);
-  const allPlayers = [myData, ...otherPlayers];
+  const otherPlayers = (players || []).filter(player => player && player.username !== myData?.username);
+  const allPlayers = [myData, ...(otherPlayers || [])];
 
   const renderHearts = (lives) => {
     const hearts = [];

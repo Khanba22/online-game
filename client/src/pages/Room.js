@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { RoomContext } from "../contexts/socketContext";
 import AudioControls from "../components/AudioControls";
@@ -12,13 +12,11 @@ const Room = () => {
   const playerData = useSelector((state) => state.otherPlayerData);
   const { username } = data;
   const { id } = useParams();
-  const { joined, setJoined, setIsAdmin, isAdmin, ws, me, roomId, isConnected } =
+  const normalizedRoomId = id?.toLowerCase();
+  const { joined, setJoined, setIsAdmin, isAdmin, ws, me, isConnected } =
     useContext(RoomContext);
-  
-  // State to track if we've already attempted to join
-  const [hasAttemptedJoin, setHasAttemptedJoin] = useState(false);
   const startGame = () => {
-    ws.emit("start-request", { roomId });
+    ws.emit("start-request", { roomId: normalizedRoomId });
   };
   useEffect(() => {
     if (joined && Object.keys(playerData).length > 0) {
@@ -33,8 +31,8 @@ const Room = () => {
   // Function to handle room joining
   const handleJoinRoom = () => {
     if (me && username && isConnected && username.trim() !== '') {
-      console.log(`Joining room ${id} with username ${username}`);
-      ws.emit("join-room", { roomId: id, peerId: me._id, username });
+      console.log(`Joining room ${normalizedRoomId} with username ${username}`);
+      ws.emit("join-room", { roomId: normalizedRoomId, peerId: me._id, username });
       setJoined(true);
     }
   };
@@ -92,7 +90,6 @@ const Room = () => {
                 }
                 onKeyPress={(e) => {
                   if (e.key === "Enter" && username.trim() && me && isConnected) {
-                    setHasAttemptedJoin(true);
                     handleJoinRoom();
                   }
                 }}
@@ -111,7 +108,6 @@ const Room = () => {
                 onClick={() => {
                   if (username.trim() && me && isConnected) {
                     console.log(`User clicked join room with username: ${username}`);
-                    setHasAttemptedJoin(true);
                     handleJoinRoom();
                   }
                 }}

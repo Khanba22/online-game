@@ -7,13 +7,14 @@ const GameConfig = createSlice({
     turn: 0,
     bulletArr: [],
     deadUsers: 0,
-    playerTurn:"signature1"
+    playerTurn: ""
   },
   reducers: {
     updateGameTurn: (state, action) => {
+      console.log(`🔄 [REDUX] updateGameTurn - playerTurn: "${action.payload.playerTurn}", turn: ${action.payload.turn}`);
       return {
         ...state,
-        playerTurn:action.payload.playerTurn,
+        playerTurn: action.payload.playerTurn,
         turn: action.payload.turn,
       };
     },
@@ -26,13 +27,13 @@ const GameConfig = createSlice({
     setBulletArr: (state, action) => {
       return {
         ...state,
-        bulletArr: action.payload.bulletArr,
+        bulletArr: action.payload.bulletArr || [],
       };
     },
     removeBulletArr: (state, action) => {
       return {
         ...state,
-        bulletArr: state.bulletArr.slice(0, -1),
+        bulletArr: (state.bulletArr || []).slice(0, -1),
       };
     },
   },

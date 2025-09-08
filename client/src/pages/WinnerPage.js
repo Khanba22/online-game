@@ -49,7 +49,7 @@ const WinnerPage = () => {
         </div>
       </div>
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        {[...Array(25)].map((_, i) => (
+        {Array.from({ length: 25 }).map((_, i) => (
           <div
             key={i}
             className="absolute animate-float"

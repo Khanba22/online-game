@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { useGLTF } from "@react-three/drei";
-import { useFrame } from "react-three-fiber";
+import { useFrame } from "@react-three/fiber";
 
 export function GunHand(props) {
   const gunRef = useRef(null);

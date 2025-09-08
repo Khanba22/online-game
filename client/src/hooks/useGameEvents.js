@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
-import { addEquipment } from '../redux/PlayerDataReducer';
-import { reduceLife, usePlayerEquipment } from '../redux/AllPlayerReducer';
+import { addEquipment, setPlayer } from '../redux/PlayerDataReducer';
+import { reduceLife, usePlayerEquipment, setOtherPlayer } from '../redux/AllPlayerReducer';
 import { updateGameTurn, setBulletArr } from '../redux/GameConfig';
 
 export const useGameEvents = (ws, username) => {
@@ -31,7 +31,8 @@ export const useGameEvents = (ws, username) => {
       livesTaken: data.livesTaken,
       isBulletLive: data.isBulletLive,
       currentTurn: data.currentTurn,
-      playerTurn: data.playerTurn
+      playerTurn: data.playerTurn,
+      turn: data.turn
     });
 
     const {
@@ -52,11 +53,11 @@ export const useGameEvents = (ws, username) => {
       if (bulletArr) {
         dispatch({
           type: `${setBulletArr}`,
-          payload: bulletArr,
+          payload: { bulletArr },
         });
       }
       
-      // Update turn from server
+      // Update turn from server - use server's turn data directly
       dispatch({
         type: `${updateGameTurn}`,
         payload: { playerTurn, turn: currentTurn },
@@ -101,7 +102,8 @@ export const useGameEvents = (ws, username) => {
     try {
       console.log("Received round-started event with data:", data);
       
-      const { bulletArr, equipments, live, fakes, turn, playerTurn } = data;
+      const { bulletArr, equipments, live, fakes, turn, playerTurn, playerData } = data;
+      console.log(`🎮 [ROUND START] Turn data - turn: ${turn}, playerTurn: "${playerTurn}"`);
     
       if (!equipments) {
         console.error("Error: Equipments is undefined on client!");
@@ -109,10 +111,29 @@ export const useGameEvents = (ws, username) => {
         return;
       }
     
+      // Update player data with positions if provided
+      if (playerData) {
+        console.log("🎮 [ROUND START] Updating player data with positions:", playerData);
+        dispatch({
+          type: `${setOtherPlayer}`,
+          payload: { data: playerData },
+        });
+        
+        // Also update current player's data if it exists in playerData
+        if (playerData[username]) {
+          console.log("🎮 [ROUND START] Updating current player data:", playerData[username]);
+          dispatch({
+            type: `${setPlayer}`,
+            payload: { data: playerData[username],cameraOffset: playerData[username].cameraOffset },
+          });
+        }
+      }
+    
       playSound("/sounds/countdown.mp3");
       console.log(equipments);
       await countdown(3, live, fakes);
     
+      console.log(`🎮 [ROUND START] Updating turn: turn=${turn}, playerTurn=${playerTurn}`);
       dispatch({
         type: `${updateGameTurn}`,
         payload: { turn, playerTurn },

@@ -110,6 +110,7 @@ export const RoomProvider = ({ children }) => {
     });
   };
   const getUsers = ({ roomId, memberNames }) => {
+    console.log('🎮 [SOCKET CONTEXT] Received get-users event:', { roomId, memberNames });
     setRoomId(roomId);
     dispatch({
       type: `${setOtherPlayer}`,
@@ -130,7 +131,7 @@ export const RoomProvider = ({ children }) => {
       type: `${setPlayer}`,
       payload: {
         data: {
-          ...memberNames[username],
+          ...(memberNames[username] || {}),
         },
       },
     });

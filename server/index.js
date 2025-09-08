@@ -18,9 +18,18 @@ const server = http.createServer(app);
 app.use(cors(config.cors));
 app.use(express.json());
 
-// Initialize modular handlers
-const gameEventHandler = new GameEventHandler();
-const roomEventHandler = new RoomEventHandler();
+// Initialize shared managers
+const RoomManager = require('./managers/RoomManager');
+const EquipmentManager = require('./managers/EquipmentManager');
+const RoundManager = require('./managers/RoundManager');
+
+const roomManager = new RoomManager();
+const equipmentManager = new EquipmentManager(roomManager);
+const roundManager = new RoundManager(roomManager, equipmentManager);
+
+// Initialize handlers with shared managers
+const gameEventHandler = new GameEventHandler(roomManager, equipmentManager, roundManager);
+const roomEventHandler = new RoomEventHandler(roomManager);
 
 // Socket.IO configuration
 const io = new Server(server, config.socket);

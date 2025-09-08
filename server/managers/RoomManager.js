@@ -21,14 +21,25 @@ class RoomManager {
     };
     this.disconnected[roomId] = {};
     
-    console.log(`Room created: ${roomId}. Total rooms: ${Object.keys(this.rooms).length}`);
-    console.log(`Available rooms: ${Object.keys(this.rooms).join(', ')}`);
+    console.log(`🏠 [ROOM MANAGER] Room created: ${roomId}. Total rooms: ${Object.keys(this.rooms).length}`);
+    console.log(`🏠 [ROOM MANAGER] Available rooms: ${Object.keys(this.rooms).join(', ')}`);
+    console.log(`🏠 [ROOM MANAGER] Room data:`, {
+      rooms: this.rooms,
+      roomNames: this.roomNames,
+      roomConfigs: this.roomConfigs
+    });
     return roomId;
   }
 
   joinRoom(socket, roomId, peerId, username) {
-    console.log(`Attempting to join room ${roomId}. Available rooms: ${Object.keys(this.rooms).join(', ')}`);
+    console.log(`🏠 [ROOM MANAGER] Attempting to join room ${roomId}. Available rooms: ${Object.keys(this.rooms).join(', ')}`);
+    console.log(`🏠 [ROOM MANAGER] Room data before join:`, {
+      rooms: this.rooms,
+      roomNames: this.roomNames,
+      roomConfigs: this.roomConfigs
+    });
     const normalizedRoomId = this.validateRoom(roomId);
+    console.log(`🏠 [ROOM MANAGER] Normalized room ID: ${normalizedRoomId}`);
 
     // Check if user is reconnecting
     if (this.disconnected[normalizedRoomId]?.[username]) {
@@ -51,6 +62,14 @@ class RoomManager {
     }
 
     socket.join(normalizedRoomId);
+    
+    console.log(`🏠 [ROOM MANAGER] User ${username} joined room ${normalizedRoomId}`);
+    console.log(`🏠 [ROOM MANAGER] Room data after join:`, {
+      rooms: this.rooms,
+      roomNames: this.roomNames,
+      roomConfigs: this.roomConfigs
+    });
+    
     return {
       roomId: normalizedRoomId,
       playerData: this.roomNames[normalizedRoomId][username]
@@ -208,6 +227,19 @@ class RoomManager {
     console.log(`Room IDs: [ ${Object.keys(this.rooms).join(', ')} ]`);
     console.log(`Room ${normalizedRoomId}:`, this.getRoomData(normalizedRoomId));
     console.log(`========================`);
+  }
+
+  // Update player state
+  updatePlayerState(roomId, username, newState) {
+    const normalizedRoomId = this.validateRoom(roomId);
+    if (this.roomNames[normalizedRoomId][username]) {
+      this.roomNames[normalizedRoomId][username] = {
+        ...this.roomNames[normalizedRoomId][username],
+        ...newState
+      };
+      return true;
+    }
+    return false;
   }
 }
 

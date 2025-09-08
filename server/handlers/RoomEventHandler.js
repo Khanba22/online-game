@@ -2,8 +2,8 @@ const { handleSocketError } = require('../utils/errorHandler');
 const RoomManager = require('../managers/RoomManager');
 
 class RoomEventHandler {
-  constructor() {
-    this.roomManager = new RoomManager();
+  constructor(roomManager) {
+    this.roomManager = roomManager;
   }
 
   handleCreateRoom(socket) {
@@ -21,42 +21,41 @@ class RoomEventHandler {
   handleJoinRoom(socket, { roomId, peerId, username }) {
     try {
       console.log(`Attempting to join room: ${roomId} with username: ${username}`);
-      this.gameStateManager.listRooms(); // Debug: list all rooms before join
-      const joinData = this.gameStateManager.joinRoom(socket, roomId, peerId, username);
+      this.roomManager.debugRoomInfo(roomId); // Debug: list all rooms before join
+      const joinData = this.roomManager.joinRoom(socket, roomId, peerId, username);
       
       // Notify all users in the room about the new user
-      socket.to(roomId).emit("user-joined", { peerId, username });
+      socket.to(joinData.roomId).emit("user-joined", { peerId, username });
       
       // Send current room state to the joining user
-      const roomData = this.gameStateManager.getRoomData(roomId);
+      const roomData = this.roomManager.getRoomData(joinData.roomId);
       socket.emit("get-users", { 
-        roomId, 
+        roomId: joinData.roomId, 
         participants: roomData.participants, 
-        memberNames: roomData.memberNames 
+        memberNames: this.roomManager.getRoomPlayers(joinData.roomId)
       });
       
       // Notify other users about the updated room state
-      this.broadcastUsers(socket, roomId);
+      this.broadcastUsers(socket, joinData.roomId);
       
       console.log(`User ${username} joined room ${roomId}`);
-      this.gameStateManager.listRooms(); // Debug: list all rooms after join
+      this.roomManager.debugRoomInfo(roomId); // Debug: list all rooms after join
       return joinData;
     } catch (error) {
       console.error('Error joining room:', error);
-      this.gameStateManager.listRooms(); // Debug: list all rooms on error
+      this.roomManager.debugRoomInfo(roomId); // Debug: list all rooms on error
       handleSocketError(socket, error, 'join-room-error');
     }
   }
 
   handleStartGame(socket, { roomId }) {
     try {
-      const startData = this.gameStateManager.startGame(roomId);
-      
+      // Start game logic - this would be handled by GameEventHandler now
       this.broadcastUsers(socket, roomId);
       socket.to(roomId).emit("start-game", { roomId });
       socket.emit("start-game", { roomId });
       
-      return startData;
+      return { roomId };
     } catch (error) {
       handleSocketError(socket, error, 'start-game-error');
     }
@@ -67,21 +66,8 @@ class RoomEventHandler {
       const userRooms = Array.from(socket.rooms).filter(roomId => roomId !== socket.id);
       
       userRooms.forEach((roomId) => {
-        const roomData = this.gameStateManager.getRoomData(roomId);
-        const username = Object.keys(roomData.memberNames).find(
-          name => roomData.memberNames[name]?.peerId === socket.id
-        );
-
-        if (username) {
-          const disconnectData = this.gameStateManager.handleDisconnect(
-            socket, 
-            roomId, 
-            socket.id, 
-            username
-          );
-          
-          socket.to(roomId).emit("user-disconnected", disconnectData);
-        }
+        this.roomManager.handleDisconnect(socket, roomId);
+        socket.to(roomId).emit("user-disconnected", { roomId });
       });
     } catch (error) {
       console.error('Error handling room disconnect:', error);
@@ -90,17 +76,17 @@ class RoomEventHandler {
 
   broadcastUsers(socket, roomId) {
     try {
-      const roomData = this.gameStateManager.getRoomData(roomId);
+      const roomData = this.roomManager.getRoomData(roomId);
       
       socket.to(roomId).emit("get-users", { 
         roomId, 
         participants: roomData.participants, 
-        memberNames: roomData.memberNames 
+        memberNames: this.roomManager.getRoomPlayers(roomId)
       });
       socket.emit("get-users", { 
         roomId, 
         participants: roomData.participants, 
-        memberNames: roomData.memberNames 
+        memberNames: this.roomManager.getRoomPlayers(roomId)
       });
     } catch (error) {
       console.error('Error broadcasting users:', error);

@@ -21,9 +21,23 @@ const Scene = ({ turn, playerTurn }) => {
   const [myRotation, setMyRotation] = useState([0, 0, 0]);
 
   useEffect(() => {
-    camera.position.set(...myData.cameraOffset);
-    camera.near = 0.01;
-    camera.lookAt(new THREE.Vector3(0, 2.1, 0));
+    if (myData?.cameraOffset && Array.isArray(myData.cameraOffset)) {
+      camera.position.set(...myData.cameraOffset);
+      console.log("🎥 [CAMERA] Set camera position to:", myData.cameraOffset);
+    } else {
+      camera.position.set(0, 2.1, 0); // Default position
+      console.log("🎥 [CAMERA] Using default camera position");
+    }
+    camera.near = 0.001;
+    
+    // Look at the player's position instead of hardcoded position
+    if (myData?.position && Array.isArray(myData.position)) {
+      camera.lookAt(new THREE.Vector3(...myData.position));
+      console.log("🎥 [CAMERA] Looking at player position:", myData.position);
+    } else {
+      camera.lookAt(new THREE.Vector3(0, 2.1, 0));
+      console.log("🎥 [CAMERA] Looking at default position");
+    }
 
     const handleKeyDown = (e) => {
       if (e.key === "x") {
@@ -36,7 +50,12 @@ const Scene = ({ turn, playerTurn }) => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [camera, scene, myData.cameraOffset]);
+  }, [camera, scene, myData.cameraOffset, myData.position]);
+
+  // Simple useEffect to make camera look at (0, 2, 0)
+  useEffect(() => {
+    camera.lookAt(0, 2, 0);
+  }, [camera]);
 
   useFrame(() => {
     const cameraRotation = [camera.rotation.x, camera.rotation.y, camera.rotation.z];

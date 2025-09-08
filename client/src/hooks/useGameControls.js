@@ -13,7 +13,8 @@ export const useGameControls = (ws, roomId) => {
   const startNextRound = useCallback(() => {
     try {
       if (ws && roomId) {
-        ws.emit("start-round", { roomId });
+        const normalizedRoomId = roomId?.toLowerCase();
+        ws.emit("start-round", { roomId: normalizedRoomId });
       } else {
         setGameError('Cannot start round: missing connection or room ID');
       }

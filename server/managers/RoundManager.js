@@ -12,6 +12,9 @@ class RoundManager {
     const fakes = Math.floor(Math.random() * 3);
     let bulletArr = this.createRandomizedArray(live, fakes);
 
+    // Set player positions before generating equipments
+    this.setPlayerPositions(normalizedRoomId);
+    
     const equipments = this.roomManager.generateEquipments(normalizedRoomId);
 
     console.log(`🎮 [ROUND START] Room: ${normalizedRoomId}, Live: ${live}, Fakes: ${fakes}, Bullets: [${bulletArr.join(', ')}]`);
@@ -24,12 +27,20 @@ class RoundManager {
     // Reset all equipment status flags for new round
     this.equipmentManager.resetAllPlayersEquipmentStatus(normalizedRoomId);
 
+    // Get updated player data with positions
+    const playerData = this.roomManager.roomNames[normalizedRoomId];
+    
+    // Get the current player (username) for the turn
+    const currentPlayer = this.getCurrentPlayer(normalizedRoomId);
+
     return {
       bulletArr,
       equipments,
       live,
       fakes,
-      turn: 0
+      turn: 0,
+      playerTurn: currentPlayer,  // Add playerTurn as string (username)
+      playerData
     };
   }
 
@@ -178,8 +189,18 @@ class RoundManager {
     const normalizedRoomId = this.roomManager.validateRoom(roomId);
     const players = Object.keys(this.roomManager.roomNames[normalizedRoomId]);
     const currentTurn = this.roomManager.getRoomConfig(normalizedRoomId).turn;
-    const currentPlayer = players[currentTurn];
-    console.log(`getCurrentPlayer - Room: ${normalizedRoomId}, Players: [${players.join(', ')}], Turn: ${currentTurn}, Current Player: ${currentPlayer}`);
+    
+    // Ensure we have players and the turn is valid
+    if (players.length === 0) {
+      console.log(`getCurrentPlayer - No players in room ${normalizedRoomId}`);
+      return null;
+    }
+    
+    // Use modulo to ensure turn is within bounds
+    const validTurn = currentTurn % players.length;
+    const currentPlayer = players[validTurn];
+    
+    console.log(`getCurrentPlayer - Room: ${normalizedRoomId}, Players: [${players.join(', ')}], Turn: ${currentTurn} (valid: ${validTurn}), Current Player: ${currentPlayer}`);
     return currentPlayer;
   }
 
@@ -289,6 +310,38 @@ class RoundManager {
       currentPlayer: this.getCurrentPlayer(normalizedRoomId),
       hasStarted: roomConfig.hasStarted
     };
+  }
+
+  setPlayerPositions(roomId) {
+    const normalizedRoomId = this.roomManager.validateRoom(roomId);
+    const members = Object.keys(this.roomManager.roomNames[normalizedRoomId]);
+    const memberCount = members.length;
+    
+    // Load position configuration
+    const positionConfig = require('../data/positionConfig.json');
+    const config = positionConfig[memberCount.toString()];
+    
+    if (!config) {
+      console.error(`No position configuration found for ${memberCount} players`);
+      return;
+    }
+    
+    // Set positions for each player
+    members.forEach((username, index) => {
+      if (config.position[index] && config.rotation[index] && config.cameraOffset[index]) {
+        this.roomManager.updatePlayerState(normalizedRoomId, username, {
+          position: config.position[index],
+          rotation: config.rotation[index],
+          cameraOffset: config.cameraOffset[index]
+        });
+        
+        console.log(`📍 [POSITION] Set position for ${username}:`, {
+          position: config.position[index],
+          rotation: config.rotation[index],
+          cameraOffset: config.cameraOffset[index]
+        });
+      }
+    });
   }
 }
 

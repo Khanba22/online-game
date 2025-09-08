@@ -1,8 +1,6 @@
 import React, { useContext, useState, useCallback } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { RoomContext } from "../../contexts/socketContext";
-import { useEquipment } from "../../redux/PlayerDataReducer";
-import { usePlayerEquipment } from "../../redux/AllPlayerReducer";
 import "./EquipmentBar.css";
 import { toast } from "react-toastify";
 import { useAudio } from "../../hooks/useAudio";
@@ -10,9 +8,7 @@ import { useAudio } from "../../hooks/useAudio";
 const EquipmentBar = () => {
   const { ws, roomId } = useContext(RoomContext);
   const data = useSelector((state) => state.myPlayerData);
-  const { bulletArr } = useSelector((state) => state.gameConfig);
   const { equipment, username } = data;
-  const dispatch = useDispatch();
   const { playSound } = useAudio();
   const [isUsingEquipment, setIsUsingEquipment] = useState(false);
 
@@ -29,8 +25,9 @@ const EquipmentBar = () => {
       // Handle special equipment effects
       if (eq === "looker") {
         // For looker, emit to server to get bullet status
+        const normalizedRoomId = roomId?.toLowerCase();
         ws.emit("look-bullet", {
-          roomId,
+          roomId: normalizedRoomId,
           player: username,
         });
       } else {
@@ -40,13 +37,14 @@ const EquipmentBar = () => {
       }
 
       // Emit to server - server will handle equipment consumption and broadcast to all clients
+      const normalizedRoomId = roomId?.toLowerCase();
       console.log(`⚙️ [CLIENT] Emitting use-equipment event:`, {
-        roomId,
+        roomId: normalizedRoomId,
         equipmentType: eq,
         player: username
       });
       ws.emit("use-equipment", {
-        roomId,
+        roomId: normalizedRoomId,
         equipmentType: eq,
         player: username,
       });
